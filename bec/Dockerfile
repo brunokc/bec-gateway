@@ -2,6 +2,11 @@
 ARG BUILD_FROM
 FROM $BUILD_FROM
 
+# Install requirements
+RUN \
+    apk add --no-cache \
+        python3
+
 # Execute during the build of the image
 ARG TEMPIO_VERSION BUILD_ARCH
 RUN \
