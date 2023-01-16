@@ -8,7 +8,7 @@ build_from:
 labels:
   org.opencontainers.image.title: "Bryant Evolution Connex add-on"
   org.opencontainers.image.description: "Bryant Evolution Connex add-on for Home Assistant."
-  org.opencontainers.image.source: "https://github.com/brunokc/ha-bec"
+  org.opencontainers.image.source: "https://github.com/brunokc/ha-bec-addon"
   org.opencontainers.image.licenses: "Apache License 2.0"
 args:
   TEMPIO_VERSION: "2021.09.0"

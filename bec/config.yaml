@@ -3,7 +3,7 @@ name: BEC
 version: "0.1.0"
 slug: bec
 description: BEC (Bryant Evolution Connex) add-on
-url: "https://github.com/brunokc/ha-bec/tree/main/bec"
+url: "https://github.com/brunokc/ha-bec-addon/tree/main/bec"
 arch:
   - armhf
   - armv7
@@ -19,4 +19,4 @@ schema:
   message: "str?"
 ports:
   8080/tcp: 8080
-#image: "ghcr.io/home-assistant/{arch}-addon-example"
+#image: "ghcr.io/brunokc/{arch}-ha-bec-addon"
