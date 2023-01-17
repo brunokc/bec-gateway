@@ -19,4 +19,4 @@ schema:
   message: "str?"
 ports:
   8080/tcp: 8080
-#image: "ghcr.io/brunokc/{arch}-ha-bec-addon"
+image: "ghcr.io/brunokc/{arch}-ha-bec-addon"
