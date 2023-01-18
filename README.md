@@ -1,4 +1,4 @@
-# BEC (Bryant Evolution Connex) for Home Assistant
+# BEC (Bryant Evolution Connex) add-on for Home Assistant
 
 This repository contains the add-on needed to add support for Bryant Evolution
 Connex thermostats. The integration that uses this add-on is located
