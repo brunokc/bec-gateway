@@ -7,8 +7,8 @@ import xml.etree.ElementTree as ET
 import sys
 sys.path.append("..")
 
-from proxy.callback import ProxyServerCallback, ProxyServerAction
-from proxy.proxyserver import ProxyServer
+from pyproxy.callback import ProxyServerCallback, ProxyServerAction
+from pyproxy.proxyserver import ProxyServer
 
 from .handlermaps import handlers, util
 
