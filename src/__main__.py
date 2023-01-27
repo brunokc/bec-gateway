@@ -1,10 +1,12 @@
 import asyncio
 import logging
 
-from .requesthandler import ConnexRequestHandler
+from .service import Service
 
 PROXY_IP = ""
 PROXY_PORT = 8080
+WEBSOCKET_IP = ""
+WEBSOCKET_PORT = 8787
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,8 +26,8 @@ def setup_logging():
 
 if __name__ == "__main__":
     setup_logging()
-    handler = ConnexRequestHandler(PROXY_IP, PROXY_PORT)
+    service = Service(PROXY_IP, PROXY_PORT, WEBSOCKET_IP, WEBSOCKET_PORT)
     try:
-        asyncio.run(handler.run())
+        asyncio.run(service.run())
     except KeyboardInterrupt:
         print("Exiting.")

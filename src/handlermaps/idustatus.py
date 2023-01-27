@@ -1,4 +1,5 @@
 from . import util
+from . import BaseHandler, DataSetType, ProcessingResult
 
 # POST /systems/1117W005762/idu_status
 # <idu_status version="1.7">
@@ -16,7 +17,7 @@ from . import util
 # </idu_status>
 
 # IDU (Inside D Unit) Status handler map
-handler_map = {
+request_map = {
     "/idu_status/idutype": {
         "name": "indoorUnitType",
         "handler": util.totext
@@ -42,3 +43,19 @@ handler_map = {
         "handler": util.toint
     },
 }
+
+class IduStatusHandler(BaseHandler):
+    def __init__(self):
+        self.method = "POST"
+        self.url_template = "/systems/([^/]+)/idu_status"
+        self.type = DataSetType.IduStatus
+        self.request_map = request_map
+        self.response_map = { }
+
+    async def process_request(self, matches, request):
+        dataset = await self.process_form_data(request)
+        keys = { "serial_number": matches[0] }
+        return ProcessingResult(self.type, keys, dataset)
+
+    async def process_response(self, matches, response):
+        return { }

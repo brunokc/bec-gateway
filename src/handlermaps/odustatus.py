@@ -1,4 +1,5 @@
 from . import util
+from . import BaseHandler, DataSetType, ProcessingResult
 
 # POST /systems/1117W005762/odu_status
 # <odu_status version="1.7">
@@ -35,7 +36,7 @@ from . import util
 # </odu_status>
 
 # ODU (Outside D Unit) Status Handler Map
-handler_map = {
+request_map = {
     "/odu_status/odutype": {
         "name": "outdoorUnitType",
         "handler": util.totext
@@ -69,3 +70,19 @@ handler_map = {
         "handler": util.tofloat
     },
 }
+
+class OduStatusHandler(BaseHandler):
+    def __init__(self):
+        self.method = "POST"
+        self.url_template = "/systems/([^/]+)/odu_status"
+        self.type = DataSetType.OduStatus
+        self.request_map = request_map
+        self.response_map = { }
+
+    async def process_request(self, matches, request):
+        dataset = await self.process_form_data(request)
+        keys = { "serial_number": matches[0] }
+        return ProcessingResult(self.type, keys, dataset)
+
+    async def process_response(self, matches, response):
+        return { }

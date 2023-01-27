@@ -1,4 +1,5 @@
 from . import util
+from . import BaseHandler, DataSetType, ProcessingResult
 
 # <name>ZONE 1</name>
 # <enabled>on</enabled>
@@ -12,7 +13,7 @@ from . import util
 # <otmr/>
 # <zoneconditioning>idle</zoneconditioning>
 # <damperposition>15</damperposition>
-zone_info_handler_map = {
+zone_info_request_map = {
     "./name": {
         "name": "name",
         "handler": util.totext
@@ -57,7 +58,7 @@ zone_info_handler_map = {
 
 def handle_zone(node):
     status = { }
-    for k, v in zone_info_handler_map.items():
+    for k, v in zone_info_request_map.items():
         subNode = util.findnode(node, k)
         name = v["name"]
         handler = v["handler"]
@@ -76,7 +77,7 @@ def handle_zones(node):
 
 # Status Handler Map
 # (includes zones status)
-handler_map = {
+request_map = {
     "/status/mode": {
         "name": "mode",
         "handler": util.totext
@@ -102,3 +103,97 @@ handler_map = {
         "handler": handle_zones
     },
 }
+
+response_map = {
+    "/status/timestamp": {
+        "name": "timestamp",
+        "handler": util.todatetime
+    },
+    "/status/pingRate": {
+        "name": "pingRate",
+        "handler": util.toint
+    },
+    "/status/iduStatusPingRate": {
+        "name": "iduStatusPingRate",
+        "handler": util.toint
+    },
+    "/status/iduFaultsPingRate": {
+        "name": "iduFaultsPingRate",
+        "handler": util.toint
+    },
+    "/status/oduStatusPingRate": {
+        "name": "oduStatusPingRate",
+        "handler": util.toint
+    },
+    "/status/oduFaultsPingRate": {
+        "name": "oduFaultsPingRate",
+        "handler": util.toint
+    },
+    "/status/historyPingRate": {
+        "name": "historyPingRate",
+        "handler": util.toint
+    },
+    "/status/equipEventsPingRate": {
+        "name": "equipEventsPingRate",
+        "handler": util.toint
+    },
+    "/status/rootCausePingRate": {
+        "name": "rootCausePingRate",
+        "handler": util.toint
+    },
+
+    "/status/configHasChanges": {
+        "name": "configHasChanges",
+        "handler": util.tobool
+    },
+    "/status/dealerHasChanges": {
+        "name": "dealerHasChanges",
+        "handler": util.tobool
+    },
+    "/status/dealerLogoHasChanges": {
+        "name": "dealerLogoHasChanges",
+        "handler": util.tobool
+    },
+    "/status/oduConfigHasChanges": {
+        "name": "oduConfigHasChanges",
+        "handler": util.tobool
+    },
+    "/status/iduConfigHasChanges": {
+        "name": "iduConfigHasChanges",
+        "handler": util.tobool
+    },
+    "/status/utilityEventsHasChanges": {
+        "name": "utilityEventsHasChanges",
+        "handler": util.tobool
+    },
+    "/status/sensorConfigHasChanges": {
+        "name": "sensorConfigHasChanges",
+        "handler": util.tobool
+    },
+    "/status/sensorProfileHasChanges": {
+        "name": "sensorProfileHasChanges",
+        "handler": util.tobool
+    },
+    "/status/sensorDiagnosticHasChanges": {
+        "name": "sensorDiagnosticHasChanges",
+        "handler": util.tobool
+    },
+}
+
+class StatusHandler(BaseHandler):
+    def __init__(self):
+        self.method = "POST"
+        self.url_template = "/systems/([^/]+)/status"
+        self.type = DataSetType.Status
+        self.request_map = request_map
+        self.response_map = response_map
+
+    async def process_request(self, matches, request):
+        dataset = await self.process_form_data(request)
+        keys = { "serial_number": matches[0] }
+        return ProcessingResult(self.type, keys, dataset)
+
+    async def process_response(self, matches, response):
+        dataset = await self.process_response_data(response)
+        keys = { "serial_number": matches[0] }
+        return ProcessingResult(DataSetType.PingRates, keys, dataset)
