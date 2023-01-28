@@ -1,7 +1,7 @@
 """XML utilities. Assumes usage of the xml.etree.ElementTree module"""
 
 from datetime import datetime
-from typing import Any, Callable, Dict, Optional, Union
+from typing import Dict, Optional, Union
 from xml.etree.ElementTree import Element
 
 from . import Map, Handler
