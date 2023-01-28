@@ -6,11 +6,9 @@ from abc import ABC, abstractmethod
 from datetime import date, datetime
 from enum import Enum
 from pyproxy.httprequest import parse_form_data, HttpRequest, HttpResponse
-from typing import Any, Callable, Dict, List, NamedTuple, Optional, Tuple
+from typing import Any, Callable, ClassVar, Dict, List, NamedTuple, Optional, Tuple
 import xml.etree.ElementTree as ET
 from xml.etree.ElementTree import Element
-
-from . import util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,8 +28,22 @@ class DateTimeEncoder(json.JSONEncoder):
             return obj.isoformat()
         return str(obj)
 
+
 Map = Dict[str, Dict[str, Any]]
 Handler = Callable[[Element], Any]
+
+from . import util
+
+class _ProcessingResult(NamedTuple):
+    type: DataSetType
+    keys: dict[str, str]
+    dataset: dict[str, Any]
+
+class ProcessingResult(_ProcessingResult):
+    Empty: ClassVar["ProcessingResult"]
+
+ProcessingResult.Empty = ProcessingResult(DataSetType.Unset, { }, { })
+
 
 class BaseHandler(ABC):
     method: str
@@ -75,22 +87,6 @@ class BaseHandler(ABC):
     @abstractmethod
     async def process_response(self, matches: List[str], response: HttpResponse) -> ProcessingResult:
         pass
-
-
-# class classproperty(property):
-#     def __get__(self, cls, owner):
-#         return classmethod(self.fget).__get__(None, owner)()
-
-class ProcessingResult(NamedTuple):
-    type: DataSetType
-    keys: dict[str, str]
-    dataset: dict[str, Any]
-
-    Empty: ProcessingResult = ProcessingResult(DataSetType.Unset, { }, { })
-
-    # @classproperty
-    # def Empty(cls) -> ProcessingResult:
-    #     return ProcessingResult(DataSetType.Unset, { }, { })
 
 
 from .status import StatusHandler
