@@ -1,5 +1,9 @@
+from pyproxy.httprequest import HttpRequest, HttpResponse
+from typing import Any, Dict, List
+from xml.etree.ElementTree import Element
+
 from . import util
-from . import BaseHandler, DataSetType, ProcessingResult
+from . import BaseHandler, DataSetType, Handler, ProcessingResult
 
 # <name>ZONE 1</name>
 # <enabled>on</enabled>
@@ -56,8 +60,8 @@ zone_info_request_map = {
     }
 }
 
-def handle_zone(node):
-    status = { }
+def handle_zone(node: Element) -> Dict[str, Any]:
+    status: Dict[str, Any] = { }
     for k, v in zone_info_request_map.items():
         subNode = util.findnode(node, k)
         name = v["name"]
@@ -65,7 +69,7 @@ def handle_zone(node):
         status.update({ name: handler(subNode) })
     return status
 
-def handle_zones(node):
+def handle_zones(node: Element) -> List[Dict[str, Any]]:
     zones = []
     for zoneNode in node:
         zone = {
@@ -181,19 +185,19 @@ response_map = {
 }
 
 class StatusHandler(BaseHandler):
-    def __init__(self):
+    def __init__(self) -> None:
         self.method = "POST"
         self.url_template = "/systems/([^/]+)/status"
         self.type = DataSetType.Status
         self.request_map = request_map
         self.response_map = response_map
 
-    async def process_request(self, matches, request):
+    async def process_request(self, matches: List[str], request: HttpRequest) -> ProcessingResult:
         dataset = await self.process_form_data(request)
         keys = { "serial_number": matches[0] }
         return ProcessingResult(self.type, keys, dataset)
 
-    async def process_response(self, matches, response):
+    async def process_response(self, matches: List[str], response: HttpResponse) -> ProcessingResult:
         dataset = await self.process_response_data(response)
         keys = { "serial_number": matches[0] }
         return ProcessingResult(DataSetType.PingRates, keys, dataset)

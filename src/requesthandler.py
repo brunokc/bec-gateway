@@ -2,6 +2,7 @@ import json
 import logging
 
 from pyproxy.callback import ProxyServerCallback, ProxyServerAction
+from pyproxy.httprequest import HttpRequest, HttpResponse
 from pyproxy.proxyserver import ProxyServer
 from typing import Callable, Optional
 
@@ -23,7 +24,7 @@ class ConnexRequestHandler(ProxyServerCallback):
         self._server.register_callback(self)
 
 
-    def register_callback(self, callback: CallbackType):
+    def register_callback(self, callback: CallbackType) -> None:
         self._callback = callback
 
     # """Convert URL encoded HTML form data into a dictionary"""
@@ -48,29 +49,27 @@ class ConnexRequestHandler(ProxyServerCallback):
 
     #     return dataset
 
-    async def on_new_request_async(self, request):
+    async def on_new_request_async(self, request: HttpRequest) -> ProxyServerAction:
         _LOGGER.debug("new request verb=%s path=%s", request.method, request.url.path)
 
-        if not self._callback:
-            return
-
-        result = await self._content_processor.process_request(request)
-        if result:
-            self._callback(result)
+        if self._callback:
+            result = await self._content_processor.process_request(request)
+            if result:
+                self._callback(result)
 
         return ProxyServerAction.Forward
 
-    async def on_new_response_async(self, request, response):
+    async def on_new_response_async(
+        self, request: HttpRequest, response: HttpResponse) -> ProxyServerAction:
+
         _LOGGER.debug("new response verb=%s path=%s", request.method, request.url.path)
 
-        if not self._callback:
-            return
-
-        result = await self._content_processor.process_response(request, response)
-        if result:
-            self._callback(result)
+        if self._callback:
+            result = await self._content_processor.process_response(request, response)
+            if result:
+                self._callback(result)
 
         return ProxyServerAction.Forward
 
-    async def run(self):
+    async def run(self) -> None:
         await self._server.run()

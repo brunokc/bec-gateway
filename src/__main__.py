@@ -10,7 +10,7 @@ WEBSOCKET_PORT = 8787
 
 _LOGGER = logging.getLogger(__name__)
 
-def setup_logging():
+def setup_logging() -> None:
     logging.basicConfig(level=logging.DEBUG, format="%(name)s: %(message)s")
     _LOGGER.setLevel(logging.DEBUG)
 

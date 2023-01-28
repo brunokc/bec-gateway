@@ -17,7 +17,7 @@ class Service:
         self.websocket.register_callback(self.on_new_message)
 
 
-    def update_thermostat(self, result: ProcessingResult):
+    def update_thermostat(self, result: ProcessingResult) -> None:
         serial_number = result.keys["serial_number"]
         if serial_number not in self.thermostats:
             self.thermostats[serial_number] = ConnexThermostat(serial_number)
@@ -26,11 +26,11 @@ class Service:
         thermostat.update(result.type, result.dataset)
 
 
-    async def on_new_message(self, client_ip, client_port, data):
+    async def on_new_message(self, client_ip: str, client_port: int, data: str) -> None:
         pass
 
 
-    async def run(self):
+    async def run(self) -> None:
         # await asyncio.gather(self.handler.run(), self.websocket.run())
         pending = [self.handler.run(), self.websocket.run()]
         while True:

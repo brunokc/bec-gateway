@@ -1,16 +1,17 @@
 from datetime import datetime
+from typing import Any, Dict
 from .handlermaps import DataSetType
 
 class DataSet:
-    def __init__(self):
+    def __init__(self) -> None:
         self.lastUpdated = datetime.min
-        self.data = { }
+        self.data: Dict[str, Any] = { }
 
-    def update(self, dataset):
+    def update(self, dataset: Dict[str, Any]) -> None:
         self.data.update(dataset)
         self.lastUpdated = datetime.now()
 
-    def __str__(self):
+    def __str__(self) -> str:
         return "\n".join([f"{k}={v}" for k, v in self.data.items()])
 
 
@@ -30,7 +31,7 @@ class ConnexThermostat:
         }
 
 
-    def update(self, dataset_type, newdataset):
+    def update(self, dataset_type: DataSetType, newdataset: Dict[str, Any]) -> None:
         dataset = self._dataset_type_map.get(dataset_type)
         if dataset:
             dataset.update(newdataset)
