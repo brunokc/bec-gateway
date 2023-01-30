@@ -3,20 +3,22 @@ name: BEC
 version: "0.1.0"
 slug: bec
 description: BEC (Bryant Evolution Connex) add-on
-url: "https://github.com/brunokc/ha-bec-addon/tree/main/bec"
+url: "https://github.com/brunokc/ha-bec-addon"
 arch:
   - armhf
   - armv7
   - aarch64
   - amd64
   - i386
+startup: services
 init: false
 map:
   - share:rw
-options:
-  message: "Hello world..."
-schema:
-  message: "str?"
+# options:
+#   message: "Hello world..."
+# schema:
+#   message: "str?"
+#apparmor: true
 ports:
   8080/tcp: 8080
 ports_description:
