@@ -2,7 +2,7 @@
 name: BEC
 version: "0.1.0"
 slug: bec
-description: BEC (Bryant Evolution Connex) add-on
+description: BEC (Bryant Evolution Connex) for Home Assistant
 url: "https://github.com/brunokc/ha-bec-addon"
 arch:
   - armhf
