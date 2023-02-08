@@ -7,7 +7,6 @@ RUN \
     apk add --no-cache \
         python3 \
         py3-pip
-#    && pip3 install --no-cache-dir -r src/requirements.txt \
 
 # Execute during the build of the image
 #ARG TEMPIO_VERSION BUILD_ARCH
