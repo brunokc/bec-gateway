@@ -21,7 +21,7 @@ COPY . /bec
 WORKDIR /bec
 RUN \
     set -x \
-    rm -r /bec/rootfs \
+    && rm -r /bec/rootfs \
     && apk add --no-cache --virtual .build-dependencies \
         git \
         python3-dev \
