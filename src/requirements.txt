@@ -1,2 +1,2 @@
 aiohttp==3.8.3
--e git+https://github.com/brunokc/pyProxy#egg=pyproxy
+git+https://github.com/brunokc/pyProxy#egg=pyproxy
