@@ -21,6 +21,8 @@ map:
 #apparmor: true
 ports:
   8080/tcp: 8080
+  8787/tcp: 8787
 ports_description:
-  8080/tcp: The port used by the proxy
+  8080/tcp: HTTP proxy port
+  8787/tcp: WebSocket port
 image: "ghcr.io/brunokc/{arch}-ha-bec-addon"
