@@ -18,15 +18,20 @@ RUN \
 COPY rootfs /
 COPY . /bec
 
-WORKDIR /bec
+# Fix up a few things in the destination directory
 RUN \
     set -x \
     && rm -r /bec/rootfs \
+    && find /bec -type f | xargs chmod a-x
+
+WORKDIR /bec
+RUN \
+    set -x \
     && apk add --no-cache --virtual .build-dependencies \
         git \
         python3-dev \
         build-base \
     && pip3 install --no-cache-dir setuptools wheel \
     && pip3 install --no-cache-dir -r requirements.txt \
-    && pip3 install --no-cache-dir -e . \
+    && pip3 install --no-cache-dir . \
     && apk del .build-dependencies \
