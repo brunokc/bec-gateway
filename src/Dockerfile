@@ -2,12 +2,6 @@
 ARG BUILD_FROM
 FROM $BUILD_FROM
 
-# Install requirements
-RUN \
-    apk add --no-cache \
-        python3 \
-        py3-pip
-
 # Execute during the build of the image
 #ARG TEMPIO_VERSION BUILD_ARCH
 #RUN \
@@ -29,9 +23,8 @@ RUN \
     set -x \
     && apk add --no-cache --virtual .build-dependencies \
         git \
-        python3-dev \
-        build-base \
-    && pip3 install --no-cache-dir setuptools wheel \
-    && pip3 install --no-cache-dir -r requirements.txt \
-    && pip3 install --no-cache-dir . \
+    && pip install --upgrade pip \
+    && pip install --no-cache-dir setuptools wheel \
+    && pip install --no-cache-dir -r requirements.txt \
+    && pip install --no-cache-dir . \
     && apk del .build-dependencies \

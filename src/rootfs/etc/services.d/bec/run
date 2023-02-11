@@ -18,5 +18,5 @@ bashio::log.info "Starting BEC add-on..."
 
 ## Run your program
 # exec /usr/bin/my_program
-#exec python3 -m bec --url "http://supervisor/core/api" --key "$SUPERVISOR_TOKEN"
-exec python3 -m bec
+#exec python -m bec --url "http://supervisor/core/api" --key "$SUPERVISOR_TOKEN"
+exec python -m bec
