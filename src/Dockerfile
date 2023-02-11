@@ -10,6 +10,9 @@ FROM $BUILD_FROM
 
 # Copy root filesystem
 COPY rootfs /
+RUN \
+    set -x \
+    && chmod 755 /etc/services.d/bec/*
 COPY . /bec
 
 # Fix up a few things in the destination directory
