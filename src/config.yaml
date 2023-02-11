@@ -2,7 +2,7 @@
 name: BEC
 version: "0.1.0"
 slug: bec
-description: BEC (Bryant Evolution Connex) for Home Assistant
+description: BEC (Bryant Evolution Connex) add-on for Home Assistant
 url: "https://github.com/brunokc/ha-bec-addon"
 arch:
   - armhf
@@ -26,3 +26,4 @@ ports_description:
   8080/tcp: HTTP proxy port
   8787/tcp: WebSocket port
 image: "ghcr.io/brunokc/{arch}-ha-bec-addon"
+stage: experimental
