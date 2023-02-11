@@ -23,6 +23,7 @@ RUN \
     set -x \
     && apk add --no-cache --virtual .build-dependencies \
         git \
+        build-base \
     && pip install --upgrade pip \
     && pip install --no-cache-dir setuptools wheel \
     && pip install --no-cache-dir -r requirements.txt \
