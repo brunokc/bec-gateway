@@ -24,6 +24,8 @@ RUN \
 WORKDIR /bec
 RUN \
     set -x \
+    && apk update \
+    && apk upgrade \
     && apk add --no-cache --virtual .build-dependencies \
         git \
         build-base \
