@@ -8,6 +8,7 @@ from .websocket import WebSocketServer
 
 class Service:
     def __init__(self, proxy_ip: str, proxy_port: int, ws_ip: str, ws_port: int):
+        self._has_updates = False
         self.thermostats: Dict[str, ConnexThermostat] = { }
 
         self.handler = ConnexRequestHandler(proxy_ip, proxy_port)
@@ -24,6 +25,7 @@ class Service:
 
         thermostat = self.thermostats[serial_number]
         thermostat.update(result.type, result.dataset)
+        self._has_updates = True
 
 
     async def on_new_message(self, client_ip: str, client_port: int, data: str) -> None:
@@ -35,7 +37,8 @@ class Service:
         pending = [self.handler.run(), self.websocket.run()]
         while True:
             done, pending = await asyncio.wait(pending, timeout=5)
-            if self.thermostats:
+            if self.thermostats and self._has_updates:
+                self._has_updates = False
                 print("Thermostats:")
                 for t in self.thermostats.values():
                     print(f"Serial Number: {t.serial_number}")
