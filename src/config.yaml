@@ -15,7 +15,6 @@ startup: services
 init: false
 map:
   - share:rw
-host_network: true
 ports:
   8080/tcp: 8080
   8787/tcp: 8787
