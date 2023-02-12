@@ -4,6 +4,7 @@ version: "0.1.0"
 slug: bec
 description: BEC (Bryant Evolution Connex) add-on for Home Assistant
 url: "https://github.com/brunokc/ha-bec-addon"
+codenotary: brunokc@kraychete.com
 arch:
   - armhf
   - armv7
