@@ -13,7 +13,6 @@ arch:
   - i386
 startup: services
 init: false
-apparmor: true
 map:
   - share:rw
 host_network: true
