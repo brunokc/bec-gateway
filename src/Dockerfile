@@ -33,4 +33,4 @@ RUN \
     && pip install --no-cache-dir setuptools wheel \
     && pip install --no-cache-dir -r requirements.txt \
     && pip install --no-cache-dir . \
-    && apk del .build-dependencies \
+    && apk del --purge .build-dependencies \
