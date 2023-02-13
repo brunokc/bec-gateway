@@ -8,11 +8,22 @@ FROM $BUILD_FROM
 #    curl -sSLf -o /usr/bin/tempio \
 #    "https://github.com/home-assistant/tempio/releases/download/${TEMPIO_VERSION}/tempio_${BUILD_ARCH}"
 
+RUN \
+    set -x \
+    && apk update \
+    && apk upgrade \
+    && apk add --no-cache --virtual .build-dependencies \
+        git \
+        build-base \
+    && pip install --upgrade pip \
+    && pip install --no-cache-dir setuptools wheel
+
 # Copy root filesystem
 COPY rootfs /
 RUN \
     set -x \
     && chmod 755 /etc/services.d/bec/*
+
 COPY . /bec
 
 # Fix up a few things in the destination directory
@@ -23,14 +34,6 @@ RUN \
 
 WORKDIR /bec
 RUN \
-    set -x \
-    && apk update \
-    && apk upgrade \
-    && apk add --no-cache --virtual .build-dependencies \
-        git \
-        build-base \
-    && pip install --upgrade pip \
-    && pip install --no-cache-dir setuptools wheel \
-    && pip install --no-cache-dir -r requirements.txt \
+    pip install --no-cache-dir -r requirements.txt \
     && pip install --no-cache-dir . \
     && apk del --purge .build-dependencies \
