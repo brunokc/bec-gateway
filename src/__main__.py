@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import sys
 
 from .service import Service
 
@@ -10,22 +11,26 @@ WEBSOCKET_PORT = 8787
 
 _LOGGER = logging.getLogger(__name__)
 
-def setup_logging() -> None:
-    logging.basicConfig(level=logging.DEBUG, format="%(name)s: %(message)s")
-    _LOGGER.setLevel(logging.DEBUG)
+def setup_logging(log_level: str) -> None:
+    level = logging.getLevelName(log_level.upper())
+    if not isinstance(level, int):
+        # If the level name is not found, getLevelName() return a string of the
+        # form "Level <level>". If that's the case, default to 'warning' level
+        level = logging.WARNING
 
-    # create console handler and set level to debug
+    logging.basicConfig(level=level, format="%(name)s: %(message)s")
+    _LOGGER.setLevel(level)
+
+    # create console handler and set level appropriately
     ch = logging.StreamHandler()
-    ch.setLevel(logging.DEBUG)
-
-    # formatter = logging.Formatter("%(name)s:%(levelname)s: %(message)s")
-    # ch.setFormatter(formatter)
+    ch.setLevel(level)
 
     _LOGGER.addHandler(ch)
 
 
 if __name__ == "__main__":
-    setup_logging()
+    log_level = sys.argv[1]
+    setup_logging(log_level)
     service = Service(PROXY_IP, PROXY_PORT, WEBSOCKET_IP, WEBSOCKET_PORT)
     try:
         asyncio.run(service.run())

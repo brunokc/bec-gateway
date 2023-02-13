@@ -4,19 +4,19 @@
 # s6-overlay docs: https://github.com/just-containers/s6-overlay
 # ==============================================================================
 
-# Add your code here
 bashio::log.info "Starting BEC add-on..."
 
-# Declare variables
-# declare message
+declare log_level
 
-## Get the 'message' key from the user config options.
-# message=$(bashio::config 'message')
-
-## Print the message the user supplied, defaults to "Hello World..."
-# bashio::log.info "${message:="Hello World..."}"
+log_level=warning
+if bashio::config.has_value 'log_level'; then
+    log_level=$(bashio::config 'log_level')
+    bashio::log.info "Log level is ${log_level} (from config)"
+elif [ ! -z "${LOG_LEVEL_OVERRIDE}" ]; then
+    log_level=${LOG_LEVEL_OVERRIDE}
+    bashio::log.info "Log level is ${log_level} (from environment)"
+fi
 
 ## Run your program
-# exec /usr/bin/my_program
-#exec python -m bec --url "http://supervisor/core/api" --key "$SUPERVISOR_TOKEN"
-exec python -m bec
+cd /
+exec python -m bec ${log_level}
