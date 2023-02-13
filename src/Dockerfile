@@ -35,5 +35,5 @@ RUN \
 WORKDIR /bec
 RUN \
     pip install --no-cache-dir -r requirements.txt \
-    && pip install --no-cache-dir . \
+    # && pip install --no-cache-dir . \
     && apk del --purge .build-dependencies \
