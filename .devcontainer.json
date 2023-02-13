@@ -1,7 +1,7 @@
 {
   "name": "BEC for Home Assistant add-on repository",
   "image": "ghcr.io/home-assistant/devcontainer:addons",
-  "appPort": ["7123:8123", "7357:4357", "8080:8080"],
+  "appPort": ["7123:8123", "7357:4357", "8080:8080", "8787:8787"],
   "postStartCommand": "sudo -E bash devcontainer_bootstrap",
   "runArgs": ["-e", "GIT_EDITOR=code --wait", "--privileged"],
   "containerEnv": {
