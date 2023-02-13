@@ -1,10 +1,13 @@
 import asyncio
+import logging
 from typing import Dict
 
 from .handlermaps import ProcessingResult
 from .requesthandler import ConnexRequestHandler
 from .thermostat import ConnexThermostat
 from .websocket import WebSocketServer
+
+_LOGGER = logging.getLogger(__name__)
 
 class Service:
     def __init__(self, proxy_ip: str, proxy_port: int, ws_ip: str, ws_port: int):
@@ -39,10 +42,10 @@ class Service:
             done, pending = await asyncio.wait(pending, timeout=5)
             if self.thermostats and self._has_updates:
                 self._has_updates = False
-                print("Thermostats:")
+                _LOGGER.debug("Thermostats:")
                 for t in self.thermostats.values():
-                    print(f"Serial Number: {t.serial_number}")
-                    print(f"Status ({t.status.lastUpdated}): {t.status}")
-                    print(f"Ping rates/Changes Pending: {t.ping_rates}")
-                    print(f"IDU Status ({t.idustatus.lastUpdated}): {t.idustatus}")
-                    print(f"ODU Status ({t.odustatus.lastUpdated}): {t.odustatus}")
+                    _LOGGER.debug("Serial Number: %s", t.serial_number)
+                    _LOGGER.debug("Status (%s): %s", t.status.lastUpdated, t.status)
+                    _LOGGER.debug("Ping rates/Changes Pending: %s", t.ping_rates)
+                    _LOGGER.debug("IDU Status (%s): %s", t.idustatus.lastUpdated, t.idustatus)
+                    _LOGGER.debug("ODU Status (%s): %s", t.odustatus.lastUpdated, t.odustatus)
