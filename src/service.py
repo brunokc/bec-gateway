@@ -1,15 +1,17 @@
 import asyncio
 import logging
-from typing import Dict
+from typing import Any, Dict
 
 from .handlermaps import ProcessingResult
 from .requesthandler import ConnexRequestHandler
 from .thermostat import ConnexThermostat
-from .websocket import WebSocketServer
+from .websocket import WebSocketCommand, WebSocketServer, WebSocketServerCallback
+
+from . import jsonutils
 
 _LOGGER = logging.getLogger(__name__)
 
-class Service:
+class Service(WebSocketServerCallback):
     def __init__(self, proxy_ip: str, proxy_port: int, ws_ip: str, ws_port: int):
         self._has_updates = False
         self.thermostats: Dict[str, ConnexThermostat] = { }
@@ -18,7 +20,11 @@ class Service:
         self.handler.register_callback(self.update_thermostat)
 
         self.websocket = WebSocketServer(ws_ip, ws_port)
-        self.websocket.register_callback(self.on_new_message)
+        self.websocket.register_callback(self)
+
+        self._ws_command_map = {
+            "getStatus": self.ws_get_status
+        }
 
 
     def update_thermostat(self, result: ProcessingResult) -> None:
@@ -31,8 +37,29 @@ class Service:
         self._has_updates = True
 
 
-    async def on_new_message(self, client_ip: str, client_port: int, data: str) -> None:
-        pass
+    def on_new_connection(self, ws, client_ip: str, client_port: int) -> None:
+        _LOGGER.debug("New websocket client connected: (%s:%s)", client_ip, client_port)
+
+
+    async def ws_get_status(self, ws, command):
+        result = { }
+        thermostats = []
+        for t in self.thermostats.values():
+            thermostats.append({
+                "serial_number": t.serial_number,
+                "lastUpdated": t.status.lastUpdated,
+                "status": t.status.data
+            })
+
+        result["thermostats"] = thermostats
+        await self.websocket.send_response(ws, command, result)
+
+
+    async def on_new_message(self, ws, client_ip: str, client_port: int, command: WebSocketCommand) -> None:
+        _LOGGER.debug("new websocket message (%s:%s): %s", client_ip, client_port, command)
+        if command.command in self._ws_command_map:
+            handler = self._ws_command_map[command.command]
+            await handler(ws, command)
 
 
     async def run(self) -> None:

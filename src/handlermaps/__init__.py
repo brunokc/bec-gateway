@@ -3,12 +3,13 @@ import logging
 import re
 
 from abc import ABC, abstractmethod
-from datetime import date, datetime
 from enum import Enum
 from pyproxy.httprequest import parse_form_data, HttpRequest, HttpResponse
 from typing import Any, Callable, ClassVar, Dict, List, NamedTuple, Optional, Tuple
 import xml.etree.ElementTree as ET
 from xml.etree.ElementTree import Element
+
+from .. import jsonutils
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -18,15 +19,6 @@ class DataSetType(Enum):
     IduStatus = "idu_status"
     OduStatus = "odu_status"
     PingRates = "ping_rates"
-
-
-class DateTimeEncoder(json.JSONEncoder):
-    """Special JSON encoder to deal with date/datetime representation"""
-    # Override the default method
-    def default(self, obj: Any) -> str:
-        if isinstance(obj, (date, datetime)):
-            return obj.isoformat()
-        return str(obj)
 
 
 Map = Dict[str, Dict[str, Any]]
@@ -43,6 +35,7 @@ class ProcessingResult(_ProcessingResult):
     Empty: ClassVar["ProcessingResult"]
 
 ProcessingResult.Empty = ProcessingResult(DataSetType.Unset, { }, { })
+
 
 
 class BaseHandler(ABC):
@@ -70,14 +63,14 @@ class BaseHandler(ABC):
     async def process_form_data(self, request: HttpRequest) -> Dict[str, Any]:
         form_data = await self.get_form_data(request)
         dataset = self.process_xml_payload(form_data, self.request_map)
-        _LOGGER.debug("request json: %s", json.dumps(dataset))
+        _LOGGER.debug("request json: %s", jsonutils.dumps(dataset))
         return dataset
 
     async def process_response_data(self, response: HttpResponse) -> Dict[str, Any]:
         body = await response.read_body()
         _LOGGER.debug("response body (%d bytes): %s", len(body), body)
         dataset = self.process_xml_payload(body.decode(), self.response_map)
-        _LOGGER.debug("response json: %s", json.dumps(dataset, cls=DateTimeEncoder))
+        _LOGGER.debug("response json: %s", jsonutils.dumps(dataset))
         return dataset
 
     @abstractmethod
