@@ -106,12 +106,6 @@ class WebSocketServer:
 
     async def send_response(self, ws, msg: WebSocketMessage, data):
         message = WebSocketMessage(msg.id, msg.action, response=data)
-        # message.response = data
-        # response = {
-        #     "id": command.id,
-        #     "command": command.command,
-        #     "response": data
-        # }
         await ws.send_json(message, dumps=jsonutils.dumps)
 
     async def run(self) -> None:
