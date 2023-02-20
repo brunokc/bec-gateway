@@ -7,11 +7,12 @@ import sys
 async def call(ws, command, args=None):
     message = {
         "id": random.randint(1, sys.maxsize),
-        "command": command,
+        "action": command,
     }
     if args is not None:
         message["args"] = args
 
+    print(f"Sending: {message}")
     await ws.send_json(message)
 
 
@@ -36,8 +37,9 @@ async def run():
                             await ws.close()
                             break
                         else:
+                            print(f"Server (raw): {msg.data}")
                             data = json.loads(msg.data)
-                            print(f"Server: {json.dumps(data, indent=2)}")
+                            print(f"Server (json): {json.dumps(data, indent=2)}")
                     elif msg.type == aiohttp.WSMsgType.BINARY:
                         #self.handle_request(msg.data)
                         pass
@@ -47,4 +49,7 @@ async def run():
 
 if __name__ == "__main__":
     random.seed()
-    asyncio.run(run())
+    try:
+        asyncio.run(run())
+    except KeyboardInterrupt:
+        pass

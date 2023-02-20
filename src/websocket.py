@@ -1,20 +1,33 @@
 from abc import ABC, abstractmethod
+from dataclasses import dataclass
 import logging
 import random
-import sys
 
 from aiohttp import web, WSMsgType
 from aiohttp.web import Request, StreamResponse
-from typing import List, NamedTuple, Optional, Tuple
+from typing import Any, List, Optional, Tuple
 
 from . import jsonutils
 
 _LOGGER = logging.getLogger(__name__)
 
-class WebSocketCommand(NamedTuple):
+@dataclass
+class WebSocketMessage:
     id: int
-    command: str
-    args: Optional[List[str]]
+    action: str
+    args: Optional[List[str]] = None
+    response: Optional[dict[str, Any]] = None
+
+    def __str__(self):
+        str = {
+            "id": self.id,
+            "action": self.action,
+        }
+        if self.args is not None:
+            str["args"] = self.args
+        if self.response is not None:
+            str["response"] = self.response
+        return jsonutils.dumps(str)
 
 
 class WebSocketServerCallback(ABC):
@@ -23,7 +36,7 @@ class WebSocketServerCallback(ABC):
         pass
 
     @abstractmethod
-    async def on_new_message(self, ws: web.WebSocketResponse, client_ip: str, client_port: int, message: WebSocketCommand):
+    async def on_new_message(self, ws: web.WebSocketResponse, client_ip: str, client_port: int, message: WebSocketMessage):
         pass
 
 
@@ -83,21 +96,23 @@ class WebSocketServer:
         if "id" not in data:
             _LOGGER.error("message doesn't contain an id. Discarding...")
             return
-        if "command" not in data:
-            _LOGGER.error("message doesn't contain a command. Discarding...")
+        if "action" not in data:
+            _LOGGER.error("message doesn't contain a action. Discarding...")
             return
 
-        command = WebSocketCommand(data["id"], data["command"],
+        message = WebSocketMessage(data["id"], data["action"],
             data["args"] if "args" in data else None)
-        await self._callback.on_new_message(ws, client_ip, client_port, command)
+        await self._callback.on_new_message(ws, client_ip, client_port, message)
 
-    async def send_response(self, ws, command: WebSocketCommand, data):
-        response = {
-            "id": command.id,
-            "command": command.command,
-            "response": data
-        }
-        await ws.send_json(response, dumps=jsonutils.dumps)
+    async def send_response(self, ws, msg: WebSocketMessage, data):
+        message = WebSocketMessage(msg.id, msg.action, response=data)
+        # message.response = data
+        # response = {
+        #     "id": command.id,
+        #     "command": command.command,
+        #     "response": data
+        # }
+        await ws.send_json(message, dumps=jsonutils.dumps)
 
     async def run(self) -> None:
         app = web.Application()

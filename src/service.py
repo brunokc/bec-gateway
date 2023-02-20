@@ -5,7 +5,7 @@ from typing import Any, Dict
 from .handlermaps import ProcessingResult
 from .requesthandler import ConnexRequestHandler
 from .thermostat import ConnexThermostat
-from .websocket import WebSocketCommand, WebSocketServer, WebSocketServerCallback
+from .websocket import WebSocketMessage, WebSocketServer, WebSocketServerCallback
 
 from . import jsonutils
 
@@ -22,7 +22,7 @@ class Service(WebSocketServerCallback):
         self.websocket = WebSocketServer(ws_ip, ws_port)
         self.websocket.register_callback(self)
 
-        self._ws_command_map = {
+        self._ws_action_map = {
             "getStatus": self.ws_get_status
         }
 
@@ -41,7 +41,7 @@ class Service(WebSocketServerCallback):
         _LOGGER.debug("New websocket client connected: (%s:%s)", client_ip, client_port)
 
 
-    async def ws_get_status(self, ws, command):
+    async def ws_get_status(self, ws, message):
         result = { }
         thermostats = []
         for t in self.thermostats.values():
@@ -52,21 +52,21 @@ class Service(WebSocketServerCallback):
             })
 
         result["thermostats"] = thermostats
-        await self.websocket.send_response(ws, command, result)
+        await self.websocket.send_response(ws, message, result)
 
 
-    async def on_new_message(self, ws, client_ip: str, client_port: int, command: WebSocketCommand) -> None:
-        _LOGGER.debug("new websocket message (%s:%s): %s", client_ip, client_port, command)
-        if command.command in self._ws_command_map:
-            handler = self._ws_command_map[command.command]
-            await handler(ws, command)
+    async def on_new_message(self, ws, client_ip: str, client_port: int, message: WebSocketMessage) -> None:
+        _LOGGER.debug("new websocket message (%s:%s): %s", client_ip, client_port, jsonutils.dumps(message))
+        if message.action in self._ws_action_map:
+            handler = self._ws_action_map[message.action]
+            await handler(ws, message)
 
 
     async def run(self) -> None:
         # await asyncio.gather(self.handler.run(), self.websocket.run())
         pending = [self.handler.run(), self.websocket.run()]
         while True:
-            done, pending = await asyncio.wait(pending, timeout=5)
+            __, pending = await asyncio.wait(pending, timeout=5)
             if self.thermostats and self._has_updates:
                 self._has_updates = False
                 _LOGGER.debug("Thermostats:")
