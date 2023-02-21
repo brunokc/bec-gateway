@@ -1,5 +1,5 @@
 import asyncio
-from datetime import datetime
+from datetime import datetime, timezone
 import logging
 from typing import Any, Dict
 
@@ -39,7 +39,7 @@ class Service(WebSocketServerCallback):
         thermostat = self.thermostats[serial_number]
         thermostat.update(result.type, result.dataset)
         self._has_updates = True
-        self.lastUpdated = datetime.now()
+        self.lastUpdated = datetime.now(timezone.utc)
         asyncio.create_task(self.raise_update_event(serial_number))
 
 

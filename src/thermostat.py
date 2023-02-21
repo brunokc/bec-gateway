@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Dict
 from .handlermaps import DataSetType
 
@@ -11,7 +11,7 @@ class DataSet:
 
     def update(self, dataset: Dict[str, Any]) -> None:
         self.data.update(dataset)
-        self.lastUpdated = datetime.now()
+        self.lastUpdated = datetime.now(timezone.utc)
 
     def __str__(self) -> str:
         # return "\n".join([f"{k}={v}" for k, v in self.data.items()])

@@ -8,7 +8,7 @@ class JSONEncoderWithDateTime(json.JSONEncoder):
     # Override the default method
     def default(self, obj: Any) -> str:
         if isinstance(obj, (date, datetime)):
-            return obj.isoformat()
+            return obj.isoformat(timespec="milliseconds").replace("+00:00", "Z")
         return str(obj)
 
 
