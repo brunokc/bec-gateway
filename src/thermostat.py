@@ -2,6 +2,8 @@ from datetime import datetime
 from typing import Any, Dict
 from .handlermaps import DataSetType
 
+from . import jsonutils
+
 class DataSet:
     def __init__(self) -> None:
         self.lastUpdated = datetime.min
@@ -12,7 +14,8 @@ class DataSet:
         self.lastUpdated = datetime.now()
 
     def __str__(self) -> str:
-        return "\n".join([f"{k}={v}" for k, v in self.data.items()])
+        # return "\n".join([f"{k}={v}" for k, v in self.data.items()])
+        return jsonutils.dumps(self.data, indent=2)
 
 
 class ConnexThermostat:

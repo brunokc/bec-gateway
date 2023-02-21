@@ -5,7 +5,7 @@ import random
 
 from aiohttp import web, WSMsgType
 from aiohttp.web import Request, StreamResponse
-from typing import Any, List, Optional, Tuple
+from typing import Any, List, Optional, Tuple, Union
 
 from . import jsonutils
 
@@ -15,7 +15,7 @@ _LOGGER = logging.getLogger(__name__)
 class WebSocketMessage:
     id: int
     action: str
-    args: Optional[List[str]] = None
+    args: Optional[Union[str, List[str], dict[str, Any]]] = None
     response: Optional[dict[str, Any]] = None
 
     def __str__(self):
@@ -30,13 +30,66 @@ class WebSocketMessage:
         return jsonutils.dumps(str)
 
 
+class WebSocket:
+    def __init__(self, client_ip: str, client_port: int, callback):
+        self._ws = web.WebSocketResponse()
+        self.client_ip = client_ip
+        self.client_port = client_port
+        self._callback = callback
+
+    async def send_response(self, msg: WebSocketMessage, data: dict[str, Any]):
+        message = WebSocketMessage(msg.id, msg.action, response=data)
+        await self._ws.send_str(str(message))
+
+    async def send_message(self, message: WebSocketMessage):
+        await self._ws.send_str(str(message))
+
+    async def handle_messages(self, request: Request):
+        await self._ws.prepare(request)
+
+        self._callback.on_new_connection(self)
+
+        async for msg in self._ws:
+            _LOGGER.debug("new message %s", msg.__repr__())
+
+            if msg.type == WSMsgType.TEXT:
+                if msg.data == "close":
+                    await self._ws.close()
+                else:
+                    await self.dispatch_callback(msg.json())
+            elif msg.type == WSMsgType.BINARY:
+                await self.dispatch_callback(msg.data)
+            elif msg.type == WSMsgType.ERROR:
+                _LOGGER.debug("error %s", self._ws.exception())
+
+    async def dispatch_callback(self, data):
+        if "id" not in data:
+            _LOGGER.error("message doesn't contain an id. Discarding...")
+            return
+        if "action" not in data:
+            _LOGGER.error("message doesn't contain an action. Discarding...")
+            return
+
+        message = WebSocketMessage(data["id"], data["action"],
+            data["args"] if "args" in data else None)
+        await self._callback.on_new_message(self, message)
+
+    async def raise_event(self, event, payload):
+        args = {
+            "event": event,
+            "payload": payload
+        }
+        message = WebSocketMessage(0, "raiseEvent", args=args)
+        await self.send_message(message)
+
+
 class WebSocketServerCallback(ABC):
     @abstractmethod
-    def on_new_connection(self, ws: web.WebSocketResponse, client_ip: str, client_port: int):
+    def on_new_connection(self, ws: WebSocket):
         pass
 
     @abstractmethod
-    async def on_new_message(self, ws: web.WebSocketResponse, client_ip: str, client_port: int, message: WebSocketMessage):
+    async def on_new_message(self, ws: WebSocket, message: WebSocketMessage):
         pass
 
 
@@ -46,6 +99,7 @@ class WebSocketServer:
         self._port = port
         self._callback: WebSocketServerCallback
         random.seed()
+        self.clients = []
 
     def register_callback(self, callback: WebSocketServerCallback) -> None:
         self._callback = callback
@@ -67,50 +121,24 @@ class WebSocketServer:
     async def wshandler(self, request: Request) -> StreamResponse:
         if self._callback is None:
             _LOGGER.debug("ignoring connection due to empty callback")
-            return None
+            return
 
         client_ip, client_port = self.get_peer_info(request)
         _LOGGER.debug(f"connection from %s:%d", client_ip, client_port)
 
-        ws = web.WebSocketResponse()
-        await ws.prepare(request)
-
-        self._callback.on_new_connection(ws, client_ip, client_port)
-
-        async for msg in ws:
-            _LOGGER.debug("new message %s", msg.__repr__())
-
-            if msg.type == WSMsgType.TEXT:
-                if msg.data == "close":
-                    await ws.close()
-                else:
-                    await self.dispatch_callback(ws, client_ip, client_port, msg.json())
-            elif msg.type == WSMsgType.BINARY:
-                await self.dispatch_callback(ws, client_ip, client_port, msg.data)
-            elif msg.type == WSMsgType.ERROR:
-                _LOGGER.debug("error %s", ws.exception())
+        ws = WebSocket(client_ip, client_port, self._callback)
+        self.clients.append(ws)
+        await ws.handle_messages(request)
 
         _LOGGER.debug("connection closed")
+        self.clients.remove(ws)
 
-    async def dispatch_callback(self, ws, client_ip, client_port, data):
-        if "id" not in data:
-            _LOGGER.error("message doesn't contain an id. Discarding...")
-            return
-        if "action" not in data:
-            _LOGGER.error("message doesn't contain a action. Discarding...")
-            return
-
-        message = WebSocketMessage(data["id"], data["action"],
-            data["args"] if "args" in data else None)
-        await self._callback.on_new_message(ws, client_ip, client_port, message)
-
-    async def send_response(self, ws, msg: WebSocketMessage, data):
-        message = WebSocketMessage(msg.id, msg.action, response=data)
-        await ws.send_json(message, dumps=jsonutils.dumps)
+    async def raise_event(self, event, args):
+        for client in self.clients:
+            await client.raise_event(event, args)
 
     async def run(self) -> None:
         app = web.Application()
-        # app.add_routes([web.get("/api/ws", self.wshandler)])
         app.router.add_get("/api/ws", self.wshandler)
 
         runner = web.AppRunner(app)

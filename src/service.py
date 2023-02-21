@@ -1,11 +1,14 @@
 import asyncio
+from datetime import datetime
 import logging
 from typing import Any, Dict
 
 from .handlermaps import ProcessingResult
 from .requesthandler import ConnexRequestHandler
 from .thermostat import ConnexThermostat
-from .websocket import WebSocketMessage, WebSocketServer, WebSocketServerCallback
+from .websocket import (
+    WebSocket, WebSocketMessage, WebSocketServer, WebSocketServerCallback
+)
 
 from . import jsonutils
 
@@ -14,6 +17,7 @@ _LOGGER = logging.getLogger(__name__)
 class Service(WebSocketServerCallback):
     def __init__(self, proxy_ip: str, proxy_port: int, ws_ip: str, ws_port: int):
         self._has_updates = False
+        self.lastUpdated = datetime.min
         self.thermostats: Dict[str, ConnexThermostat] = { }
 
         self.handler = ConnexRequestHandler(proxy_ip, proxy_port)
@@ -35,31 +39,50 @@ class Service(WebSocketServerCallback):
         thermostat = self.thermostats[serial_number]
         thermostat.update(result.type, result.dataset)
         self._has_updates = True
+        self.lastUpdated = datetime.now()
+        asyncio.create_task(self.raise_update_event(serial_number))
 
 
-    def on_new_connection(self, ws, client_ip: str, client_port: int) -> None:
-        _LOGGER.debug("New websocket client connected: (%s:%s)", client_ip, client_port)
+    def on_new_connection(self, ws: WebSocket) -> None:
+        _LOGGER.debug("new websocket client connected: (%s:%s)", ws.client_ip, ws.client_port)
 
 
     async def ws_get_status(self, ws, message):
+        serial_numbers = None
+        if message.args is not None:
+            args = message.args
+            if isinstance(args, list):
+                serial_numbers = [x for x in args]
+            else:
+                serial_numbers = [args]
+
         result = { }
         thermostats = []
         for t in self.thermostats.values():
+            if serial_numbers is not None:
+                if t.serial_number not in serial_numbers:
+                    continue
+
             thermostats.append({
                 "serial_number": t.serial_number,
                 "lastUpdated": t.status.lastUpdated,
                 "status": t.status.data
             })
 
+        result["lastUpdated"] = self.lastUpdated
         result["thermostats"] = thermostats
-        await self.websocket.send_response(ws, message, result)
+        await ws.send_response(message, result)
 
 
-    async def on_new_message(self, ws, client_ip: str, client_port: int, message: WebSocketMessage) -> None:
-        _LOGGER.debug("new websocket message (%s:%s): %s", client_ip, client_port, jsonutils.dumps(message))
+    async def on_new_message(self, ws: WebSocket, message: WebSocketMessage) -> None:
+        _LOGGER.debug("new websocket message (%s:%s): %s", ws.client_ip, ws.client_port, jsonutils.dumps(message))
         if message.action in self._ws_action_map:
             handler = self._ws_action_map[message.action]
             await handler(ws, message)
+
+
+    async def raise_update_event(self, serial_number):
+        await self.websocket.raise_event("thermostatUpdated", { "thermostats": [serial_number] })
 
 
     async def run(self) -> None:

@@ -4,6 +4,9 @@ import json
 import random
 import sys
 
+sys.path += ".."
+from src import jsonutils
+
 async def call(ws, command, args=None):
     message = {
         "id": random.randint(1, sys.maxsize),
@@ -12,14 +15,35 @@ async def call(ws, command, args=None):
     if args is not None:
         message["args"] = args
 
-    print(f"Sending: {message}")
+    print(f"Sending: {jsonutils.dumps(message)}")
     await ws.send_json(message)
 
 
-async def get_status(ws):
-    while True:
-        await call(ws, "getStatus")
-        await asyncio.sleep(10)
+async def get_status(ws, args=None):
+    await call(ws, "getStatus", args)
+
+
+async def dispatch(ws, msg):
+    id = msg["id"]
+    action = msg["action"]
+    args = msg["args"] if "args" in msg else None
+    response = msg["response"] if "response" in msg else None
+
+    print(f"Server (raw): {msg}")
+    print(f"WebSocketMessage: id={id}; action={action}")
+    if args is not None:
+        print(f"  args: {jsonutils.dumps(args, indent=2)}")
+    if response is not None:
+        print(f"  response: {jsonutils.dumps(response, indent=2)}")
+
+    if (action == "raiseEvent" and args is not None and args["event"] == "thermostatUpdated"
+        and "payload" in args):
+
+        thermostats = args["payload"]["thermostats"]
+        await get_status(ws, thermostats)
+
+    # data = json.loads(msg.data)
+    # print(f"Server (json): {jsonutils.dumps(data, indent=2)}")
 
 
 async def run():
@@ -33,13 +57,15 @@ async def run():
                 print("Waiting for messages...")
                 async for msg in ws:
                     if msg.type == aiohttp.WSMsgType.TEXT:
-                        if msg.data == 'close cmd':
+                        data = msg.data
+                        if data == 'close cmd':
                             await ws.close()
                             break
                         else:
-                            print(f"Server (raw): {msg.data}")
-                            data = json.loads(msg.data)
-                            print(f"Server (json): {json.dumps(data, indent=2)}")
+                            # print(f"data({type(data)})={data}")
+                            jsondata = json.loads(data)
+                            # print(f"jsondata({type(jsondata)})={jsondata}")
+                            await dispatch(ws, jsondata)
                     elif msg.type == aiohttp.WSMsgType.BINARY:
                         #self.handle_request(msg.data)
                         pass
