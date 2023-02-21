@@ -119,25 +119,31 @@ class WebSocketServer:
         return client_ip, client_port
 
     async def wshandler(self, request: Request) -> StreamResponse:
-        if self._callback is None:
-            _LOGGER.debug("ignoring connection due to empty callback")
-            return
+        assert self._callback is not None
 
         client_ip, client_port = self.get_peer_info(request)
         _LOGGER.debug(f"connection from %s:%d", client_ip, client_port)
 
         ws = WebSocket(client_ip, client_port, self._callback)
+
         self.clients.append(ws)
-        await ws.handle_messages(request)
+        try:
+            await ws.handle_messages(request)
+        finally:
+            self.clients.remove(ws)
 
         _LOGGER.debug("connection closed")
-        self.clients.remove(ws)
+        return ws._ws
 
     async def raise_event(self, event, args):
         for client in self.clients:
             await client.raise_event(event, args)
 
     async def run(self) -> None:
+        if self._callback is None:
+            _LOGGER.debug("No callback defined, canceling websocket")
+            raise RuntimeError("Starting websocket without setting a callback")
+
         app = web.Application()
         app.router.add_get("/api/ws", self.wshandler)
 
