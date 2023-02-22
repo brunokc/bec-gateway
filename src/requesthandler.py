@@ -54,7 +54,7 @@ class ConnexRequestHandler(ProxyServerCallback):
 
         if self._callback:
             result = await self._content_processor.process_request(request)
-            if result:
+            if result is not None and result != ProcessingResult.Empty:
                 self._callback(result)
 
         return ProxyServerAction.Forward
@@ -66,7 +66,7 @@ class ConnexRequestHandler(ProxyServerCallback):
 
         if self._callback:
             result = await self._content_processor.process_response(request, response)
-            if result:
+            if result is not None and result != ProcessingResult.Empty:
                 self._callback(result)
 
         return ProxyServerAction.Forward
