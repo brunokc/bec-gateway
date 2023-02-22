@@ -4,6 +4,10 @@ import json
 import random
 import sys
 
+from aiohttp.client_exceptions import (
+    ClientConnectorError, ServerDisconnectedError
+)
+
 sys.path += ".."
 from src import jsonutils
 
@@ -46,31 +50,42 @@ async def dispatch(ws, msg):
     # print(f"Server (json): {jsonutils.dumps(data, indent=2)}")
 
 
+async def handle_connection(ws):
+    command_task = asyncio.create_task(get_status(ws))
+
+    print("Waiting for messages...")
+    async for msg in ws:
+        if msg.type == aiohttp.WSMsgType.TEXT:
+            data = msg.data
+            if data == 'close cmd':
+                await ws.close()
+                break
+            else:
+                # print(f"data({type(data)})={data}")
+                jsondata = json.loads(data)
+                # print(f"jsondata({type(jsondata)})={jsondata}")
+                await dispatch(ws, jsondata)
+        elif msg.type == aiohttp.WSMsgType.BINARY:
+            #self.handle_request(msg.data)
+            pass
+        elif msg.type == aiohttp.WSMsgType.ERROR:
+            break
+
+
 async def run():
     async with aiohttp.ClientSession() as session:
         url = "http://192.168.1.182:8787/api/ws"
-        async with session.ws_connect(url) as ws:
-            while True:
-                print(f"Connected to {url}")
-                command_task = asyncio.create_task(get_status(ws))
-
-                print("Waiting for messages...")
-                async for msg in ws:
-                    if msg.type == aiohttp.WSMsgType.TEXT:
-                        data = msg.data
-                        if data == 'close cmd':
-                            await ws.close()
-                            break
-                        else:
-                            # print(f"data({type(data)})={data}")
-                            jsondata = json.loads(data)
-                            # print(f"jsondata({type(jsondata)})={jsondata}")
-                            await dispatch(ws, jsondata)
-                    elif msg.type == aiohttp.WSMsgType.BINARY:
-                        #self.handle_request(msg.data)
-                        pass
-                    elif msg.type == aiohttp.WSMsgType.ERROR:
-                        break
+        while True:
+            try:
+                async with session.ws_connect(url) as ws:
+                    print(f"Connected to {url}")
+                    await handle_connection(ws)
+            except ServerDisconnectedError:
+                print(f"Server disconnected. Retrying...")
+                await asyncio.sleep(3)
+            except ClientConnectorError:
+                print(f"Could not connect to server. Retrying...")
+                await asyncio.sleep(3)
 
 
 if __name__ == "__main__":
