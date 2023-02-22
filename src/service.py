@@ -1,7 +1,7 @@
 import asyncio
 from datetime import datetime, timezone
 import logging
-from typing import Any, Dict
+from typing import Any, Dict, List, Set
 
 from .handlermaps import ProcessingResult
 from .requesthandler import ConnexRequestHandler
@@ -47,17 +47,18 @@ class Service(WebSocketServerCallback):
         _LOGGER.debug("new websocket client connected: (%s:%s)", ws.client_ip, ws.client_port)
 
 
-    async def ws_get_status(self, ws, message):
+    async def ws_get_status(self, ws: WebSocket, message: WebSocketMessage) -> None:
         serial_numbers = None
         if message.args is not None:
             args = message.args
+            assert isinstance(args, list) or isinstance(args, str)
             if isinstance(args, list):
                 serial_numbers = [x for x in args]
-            else:
+            elif isinstance(args, str):
                 serial_numbers = [args]
 
-        result = { }
-        thermostats = []
+        result: Dict[str, Any] = { }
+        thermostats: List[Dict[str, Any]] = []
         for t in self.thermostats.values():
             if serial_numbers is not None:
                 if t.serial_number not in serial_numbers:
@@ -81,13 +82,16 @@ class Service(WebSocketServerCallback):
             await handler(ws, message)
 
 
-    async def raise_update_event(self, serial_number):
+    async def raise_update_event(self, serial_number: str) -> None:
         await self.websocket.raise_event("thermostatUpdated", { "thermostats": [serial_number] })
 
 
     async def run(self) -> None:
         # await asyncio.gather(self.handler.run(), self.websocket.run())
-        pending = [self.handler.run(), self.websocket.run()]
+        pending: Set[asyncio.Task[None]] = {
+            asyncio.create_task(self.handler.run()),
+            asyncio.create_task(self.websocket.run())
+        }
         while True:
             __, pending = await asyncio.wait(pending, timeout=5)
             if self.thermostats and self._has_updates:

@@ -15,7 +15,7 @@ class JSONEncoderWithDateTime(json.JSONEncoder):
         return str(obj)
 
 
-def clean_dict(d):
+def clean_dict(d: Any) -> Any:
     if isinstance(d, dict):
         return {k: clean_dict(v) for k, v in d.items() if v is not None}
     elif isinstance(d, list):
@@ -24,5 +24,5 @@ def clean_dict(d):
         return d
 
 
-def dumps(data, **kargs):
-    return json.dumps(clean_dict(data), cls=JSONEncoderWithDateTime, **kargs)
+def dumps(data: Any, **kwargs: Any) -> str:
+    return json.dumps(clean_dict(data), cls=JSONEncoderWithDateTime, **kwargs)

@@ -5,7 +5,7 @@ import random
 
 from aiohttp import web, WSMsgType
 from aiohttp.web import Request, StreamResponse
-from typing import Any, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 from . import jsonutils
 
@@ -18,7 +18,7 @@ class WebSocketMessage:
     args: Optional[Union[str, List[str], dict[str, Any]]] = None
     response: Optional[dict[str, Any]] = None
 
-    def __str__(self):
+    def __str__(self) -> str:
         str = {
             "id": self.id,
             "action": self.action,
@@ -31,20 +31,20 @@ class WebSocketMessage:
 
 
 class WebSocket:
-    def __init__(self, client_ip: str, client_port: int, callback):
+    def __init__(self, client_ip: str, client_port: int, callback: "WebSocketServerCallback") -> None:
         self._ws = web.WebSocketResponse()
         self.client_ip = client_ip
         self.client_port = client_port
         self._callback = callback
 
-    async def send_response(self, msg: WebSocketMessage, data: dict[str, Any]):
+    async def send_response(self, msg: WebSocketMessage, data: dict[str, Any]) -> None:
         message = WebSocketMessage(msg.id, msg.action, response=data)
         await self._ws.send_str(str(message))
 
-    async def send_message(self, message: WebSocketMessage):
+    async def send_message(self, message: WebSocketMessage) -> None:
         await self._ws.send_str(str(message))
 
-    async def handle_messages(self, request: Request):
+    async def handle_messages(self, request: Request) -> None:
         await self._ws.prepare(request)
 
         self._callback.on_new_connection(self)
@@ -62,7 +62,7 @@ class WebSocket:
             elif msg.type == WSMsgType.ERROR:
                 _LOGGER.debug("error %s", self._ws.exception())
 
-    async def dispatch_callback(self, data):
+    async def dispatch_callback(self, data: Dict[str, Any]) -> None:
         if "id" not in data:
             _LOGGER.error("message doesn't contain an id. Discarding...")
             return
@@ -74,7 +74,7 @@ class WebSocket:
             data["args"] if "args" in data else None)
         await self._callback.on_new_message(self, message)
 
-    async def raise_event(self, event, payload):
+    async def raise_event(self, event: str, payload: Dict[str, Any]) -> None:
         args = {
             "event": event,
             "payload": payload
@@ -85,11 +85,11 @@ class WebSocket:
 
 class WebSocketServerCallback(ABC):
     @abstractmethod
-    def on_new_connection(self, ws: WebSocket):
+    def on_new_connection(self, ws: WebSocket) -> None:
         pass
 
     @abstractmethod
-    async def on_new_message(self, ws: WebSocket, message: WebSocketMessage):
+    async def on_new_message(self, ws: WebSocket, message: WebSocketMessage) -> None:
         pass
 
 
@@ -99,7 +99,7 @@ class WebSocketServer:
         self._port = port
         self._callback: WebSocketServerCallback
         random.seed()
-        self.clients = []
+        self.clients: List[WebSocket] = []
 
     def register_callback(self, callback: WebSocketServerCallback) -> None:
         self._callback = callback
@@ -135,7 +135,7 @@ class WebSocketServer:
         _LOGGER.debug("connection closed")
         return ws._ws
 
-    async def raise_event(self, event, args):
+    async def raise_event(self, event: str, args: Dict[str, Any]) -> None:
         for client in self.clients:
             await client.raise_event(event, args)
 
