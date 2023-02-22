@@ -2,6 +2,7 @@ from pyproxy.httprequest import HttpRequest, HttpResponse
 from typing import Any, Dict, List
 from xml.etree.ElementTree import Element
 
+from . import Map
 from . import util
 from . import BaseHandler, DataSetType, Handler, ProcessingResult
 
@@ -17,7 +18,7 @@ from . import BaseHandler, DataSetType, Handler, ProcessingResult
 # <otmr/>
 # <zoneconditioning>idle</zoneconditioning>
 # <damperposition>15</damperposition>
-zone_info_request_map = {
+zone_info_request_map: Map = {
     "./name": {
         "name": "name",
         "handler": util.totext
@@ -108,7 +109,7 @@ request_map = {
     },
 }
 
-response_map = {
+response_map: Map = {
     "/status/timestamp": {
         "name": "timestamp",
         "handler": util.todatetime

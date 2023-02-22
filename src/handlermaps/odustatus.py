@@ -1,5 +1,7 @@
 from pyproxy.httprequest import HttpRequest, HttpResponse
 from typing import List
+
+from . import Map
 from . import util
 from . import BaseHandler, DataSetType, ProcessingResult
 
@@ -38,7 +40,7 @@ from . import BaseHandler, DataSetType, ProcessingResult
 # </odu_status>
 
 # ODU (Outside D Unit) Status Handler Map
-request_map = {
+request_map: Map = {
     "/odu_status/odutype": {
         "name": "outdoorUnitType",
         "handler": util.totext

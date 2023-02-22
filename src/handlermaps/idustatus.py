@@ -1,5 +1,7 @@
 from pyproxy.httprequest import HttpRequest, HttpResponse
 from typing import List
+
+from . import Map
 from . import util
 from . import BaseHandler, DataSetType, ProcessingResult
 
@@ -19,7 +21,7 @@ from . import BaseHandler, DataSetType, ProcessingResult
 # </idu_status>
 
 # IDU (Inside D Unit) Status handler map
-request_map = {
+request_map: Map = {
     "/idu_status/idutype": {
         "name": "indoorUnitType",
         "handler": util.totext
