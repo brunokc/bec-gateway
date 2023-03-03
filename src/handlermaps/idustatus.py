@@ -20,7 +20,7 @@ from . import BaseHandler, DataSetType, ProcessingResult
 #     <lockouttime>off</lockouttime>
 # </idu_status>
 
-# IDU (Inside D Unit) Status handler map
+# IDU (InDoor Unit) Status handler map
 request_map: Map = {
     "/idu_status/idutype": {
         "name": "indoorUnitType",
@@ -28,6 +28,10 @@ request_map: Map = {
     },
     "/idu_status/pwmblower": {
         "name": "?pwmBlower",
+        "handler": util.totext
+    },
+    "/idu_status/opstat": {
+        "name": "?opstat",
         "handler": util.totext
     },
     "/idu_status/iducfm": {
