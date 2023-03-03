@@ -8,6 +8,7 @@ PROXY_IP = ""
 PROXY_PORT = 8080
 WEBSOCKET_IP = ""
 WEBSOCKET_PORT = 8787
+WEBSOCKET_URL = "/api/websocket"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,7 +32,7 @@ def setup_logging(log_level: str) -> None:
 if __name__ == "__main__":
     log_level = sys.argv[1]
     setup_logging(log_level)
-    service = Service(PROXY_IP, PROXY_PORT, WEBSOCKET_IP, WEBSOCKET_PORT)
+    service = Service(PROXY_IP, PROXY_PORT, WEBSOCKET_IP, WEBSOCKET_PORT, WEBSOCKET_URL)
     try:
         asyncio.run(service.run())
     except KeyboardInterrupt:
