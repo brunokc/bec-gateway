@@ -3,13 +3,16 @@ import json
 from typing import Any
 
 
+def to_iso_format(dt: datetime):
+    return dt.isoformat(timespec="milliseconds").replace("+00:00", "Z")
+
 class JSONEncoderWithDateTime(json.JSONEncoder):
     """Special JSON encoder to deal with date/datetime representation"""
     # Override the default method
     def default(self, obj: Any) -> str:
         # Since datetime derives from date, check for it first
         if isinstance(obj, datetime):
-            return obj.isoformat(timespec="milliseconds").replace("+00:00", "Z")
+            return to_iso_format(obj)
         elif isinstance(obj, date):
             return obj.isoformat()
         return str(obj)
