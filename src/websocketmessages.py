@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from datetime import datetime
 from pywsp import MessageFactory, WebSocketMessage, message
 from typing import Any, Dict, List
 
@@ -8,7 +7,7 @@ class EventMessage(WebSocketMessage):
     name: str
     args: Dict[str, Any]
 
-@message(type="status_request")
+@message(type="request_status")
 class StatusRequestMessage(WebSocketMessage):
     args: List[str]
 
