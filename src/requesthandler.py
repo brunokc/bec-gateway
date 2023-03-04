@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 import logging
 
 from pyproxy.callback import ProxyServerCallback, ProxyServerAction
@@ -20,6 +21,11 @@ class ConnexRequestHandler(ProxyServerCallback):
         self._server = ProxyServer(proxy_ip, proxy_port)
         self._server.register_callback(self)
 
+        self._last_activity_time = datetime.min
+
+    @property
+    def last_activity_time(self) -> datetime:
+        return self._last_activity_time
 
     def register_callback(self, callback: CallbackType) -> None:
         self._callback = callback
@@ -32,6 +38,8 @@ class ConnexRequestHandler(ProxyServerCallback):
             if result is not None and result != ProcessingResult.Empty:
                 self._callback(result)
 
+        self._last_activity_time = datetime.now(timezone.utc)
+
         return ProxyServerAction.Forward
 
     async def on_new_response_async(
@@ -43,6 +51,8 @@ class ConnexRequestHandler(ProxyServerCallback):
             result = await self._content_processor.process_response(request, response)
             if result is not None and result != ProcessingResult.Empty:
                 self._callback(result)
+
+        self._last_activity_time = datetime.now(timezone.utc)
 
         return ProxyServerAction.Forward
 
