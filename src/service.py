@@ -4,21 +4,20 @@ import logging
 from pywsp import (
     WebSocket, WebSocketMessage, WebSocketServer, WebSocketCallback
 )
-from typing import Any, Dict, List, Optional, Set
+from typing import Dict, List, Optional, Set
 
-from .handlermaps import ProcessingResult
+from .handlermaps import DataSetType, ProcessingResult
 from .requesthandler import ConnexRequestHandler
 from .thermostat import ConnexThermostat
 from .websocketmessages import *
 
-from . import jsonutils
+from . import datetimeutils, jsonutils
 
 _LOGGER = logging.getLogger(__name__)
 
 class Service(WebSocketCallback):
     def __init__(self, proxy_ip: str, proxy_port: int, ws_ip: str, ws_port: int, ws_url: str):
-        self._has_updates = False
-        self.lastUpdated = datetime.min
+        self.lastUpdated = datetimeutils.utcmin
         self.thermostats: Dict[str, ConnexThermostat] = { }
         self._ws_ip = ws_ip
         self._ws_port = ws_port
@@ -30,10 +29,6 @@ class Service(WebSocketCallback):
         self.wsserver = WebSocketServer(message_factory)
         self.wsserver.register_callback(self)
         self._websocket: Optional[WebSocket] = None
-
-        self._ws_action_map = {
-            "getStatus": self.ws_get_status
-        }
 
         self._ws_message_type_map = {
             StatusRequestMessage: self._ws_status_request
@@ -47,9 +42,13 @@ class Service(WebSocketCallback):
 
         thermostat = self.thermostats[serial_number]
         thermostat.update(result.type, result.dataset)
-        self._has_updates = True
-        self.lastUpdated = datetime.now(timezone.utc)
-        asyncio.create_task(self.raise_update_event(serial_number))
+
+        # Status updates are followed by a PingRate right behind it, so don't
+        # raise an update event on "Status". Wait for "PingRate" and raise the
+        # event only once.
+        if result.type != DataSetType.Status:
+            self.lastUpdated = datetime.now(timezone.utc)
+            asyncio.create_task(self.raise_update_event(serial_number))
 
 
     def on_new_connection(self, ws: WebSocket) -> None:
@@ -58,38 +57,12 @@ class Service(WebSocketCallback):
         self._websocket = ws
 
 
-    async def ws_get_status(self, ws: WebSocket, message: WebSocketMessage) -> None:
-        serial_numbers = None
-        if message.args is not None:
-            args = message.args
-            assert isinstance(args, list) or isinstance(args, str)
-            if isinstance(args, list):
-                serial_numbers = [x for x in args]
-            elif isinstance(args, str):
-                serial_numbers = [args]
-
-        result: Dict[str, Any] = { }
-        thermostats: List[Dict[str, Any]] = []
-        for t in self.thermostats.values():
-            if serial_numbers is not None:
-                if t.serial_number not in serial_numbers:
-                    continue
-
-            thermostats.append({
-                "serial_number": t.serial_number,
-                "lastUpdated": t.status.lastUpdated,
-                "status": t.status.data
-            })
-
-        result["lastUpdated"] = self.lastUpdated
-        result["thermostats"] = thermostats
-        await ws.send_response(message, result)
-
     async def _ws_status_request(self, ws: WebSocket, message: StatusRequestMessage) -> None:
         serial_numbers = message.args
 
         thermostats: List[Thermostat] = []
         for t in self.thermostats.values():
+            # If the request includes serial numbers, use them as a filter
             if serial_numbers and t.serial_number not in serial_numbers:
                 continue
 
@@ -101,7 +74,7 @@ class Service(WebSocketCallback):
 
         response = StatusResponseMessage(
             id=message.id,
-            last_updated=jsonutils.to_iso_format(self.lastUpdated),
+            last_updated=datetimeutils.to_iso_format(self.lastUpdated),
             thermostats=thermostats
         )
         await ws.send_message(response)
@@ -109,9 +82,6 @@ class Service(WebSocketCallback):
 
     async def on_new_message(self, ws: WebSocket, message: WebSocketMessage) -> None:
         _LOGGER.debug("new websocket message (%s:%s): %s", ws.peer_info.ip, ws.peer_info.port, jsonutils.dumps(message))
-        # if message.action in self._ws_action_map:
-        #     handler = self._ws_action_map[message.action]
-        #     await handler(ws, message)
         handler = self._ws_message_type_map.get(type(message), None)
         if handler is not None:
             await handler(ws, message)
@@ -134,10 +104,11 @@ class Service(WebSocketCallback):
             asyncio.create_task(self.handler.run()),
             asyncio.create_task(self.wsserver.run(self._ws_ip, self._ws_port, self._ws_url))
         }
+        last_updated = self.lastUpdated
         while True:
             __, pending = await asyncio.wait(pending, timeout=5)
-            if self.thermostats and self._has_updates:
-                self._has_updates = False
+            if self.thermostats and self.lastUpdated > last_updated:
+                last_updated = self.lastUpdated
                 _LOGGER.debug("Thermostats:")
                 for t in self.thermostats.values():
                     _LOGGER.debug("Serial Number: %s", t.serial_number)
