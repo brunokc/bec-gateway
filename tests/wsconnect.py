@@ -52,7 +52,9 @@ class Program(WebSocketCallback):
             except ClientConnectorError:
                 print(f"Could not connect to server. Retrying...")
                 await asyncio.sleep(3)
-
+            except Exception as e:
+                print(f"Unknown error {e}. Retrying...")
+                await asyncio.sleep(3)
 
 if __name__ == "__main__":
     random.seed()
