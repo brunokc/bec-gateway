@@ -4,6 +4,7 @@ from datetime import datetime
 from typing import Dict, Optional, Union
 from xml.etree.ElementTree import Element
 
+from .. import datetimeutils
 from . import Map, Handler
 
 def toint(node: Element) -> Union[int, str]:
@@ -27,10 +28,7 @@ def todatetime(node: Element) -> datetime:
     (it seems Python 3.11 corrected this), so we have to drop the last "Z" from
     the string as a workaround
     """
-    if node.text and node.text.endswith("Z"):
-        return datetime.fromisoformat(node.text[:-1])
-    else:
-        return datetime.fromisoformat(node.text if node.text else "")
+    return datetimeutils.from_iso_format(node.text if node.text else "")
 
 def findnode(root: Element, xpath: str) -> Optional[Element]:
     """Finds an XML node, allowing for leading '/' or '.' to be used"""
