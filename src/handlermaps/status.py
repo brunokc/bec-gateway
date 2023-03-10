@@ -1,4 +1,4 @@
-from pyproxy.httprequest import HttpRequest, HttpResponse
+from pyproxy import HttpRequest, HttpResponse
 from typing import Any, Dict, List
 from xml.etree.ElementTree import Element
 
@@ -188,7 +188,7 @@ response_map: Map = {
 class StatusHandler(BaseHandler):
     def __init__(self) -> None:
         self.method = "POST"
-        self.url_template = "/systems/([^/]+)/status"
+        self.url_template = r"/systems/([^/]+)/status"
         self.type = DataSetType.Status
         self.request_map = request_map
         self.response_map = response_map

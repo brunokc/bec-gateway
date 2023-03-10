@@ -6,12 +6,15 @@ from . import jsonutils
 
 class DataSet:
     def __init__(self) -> None:
-        self.lastUpdated = datetime.min
+        self.last_updated = datetime.min
         self.data: Dict[str, Any] = { }
+
+    def __len__(self) -> int:
+        return len(self.data)
 
     def update(self, dataset: Dict[str, Any]) -> None:
         self.data.update(dataset)
-        self.lastUpdated = datetime.now(timezone.utc)
+        self.last_updated = datetime.now(timezone.utc)
 
     def __str__(self) -> str:
         # return "\n".join([f"{k}={v}" for k, v in self.data.items()])
@@ -33,8 +36,7 @@ class ConnexThermostat:
             DataSetType.PingRates: self.ping_rates,
         }
 
-
     def update(self, dataset_type: DataSetType, newdataset: Dict[str, Any]) -> None:
-        dataset = self._dataset_type_map.get(dataset_type)
-        if dataset:
+        dataset = self._dataset_type_map.get(dataset_type, None)
+        if dataset is not None:
             dataset.update(newdataset)

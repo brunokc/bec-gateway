@@ -17,7 +17,7 @@ _LOGGER = logging.getLogger(__name__)
 
 class Service(WebSocketCallback):
     def __init__(self, proxy_ip: str, proxy_port: int, ws_ip: str, ws_port: int, ws_url: str):
-        self.lastUpdated = datetimeutils.utcmin
+        self.last_updated = datetimeutils.utcmin
         self.thermostats: Dict[str, ConnexThermostat] = { }
         self._ws_ip = ws_ip
         self._ws_port = ws_port
@@ -25,6 +25,8 @@ class Service(WebSocketCallback):
 
         self.handler = ConnexRequestHandler(proxy_ip, proxy_port)
         self.handler.register_callback(self.update_thermostat)
+        # Start with short ping rates to quickly populate all datasets
+        self.handler.set_ping_rate(5)
 
         self.wsserver = WebSocketServer(message_factory)
         self.wsserver.register_callback(self)
@@ -40,15 +42,25 @@ class Service(WebSocketCallback):
         if serial_number not in self.thermostats:
             self.thermostats[serial_number] = ConnexThermostat(serial_number)
 
+        _LOGGER.debug("updating thermostat %s for dataset %s", serial_number,
+            result.type.name)
         thermostat = self.thermostats[serial_number]
         thermostat.update(result.type, result.dataset)
 
         # Status updates are followed by a PingRate right behind it, so don't
         # raise an update event on "Status". Wait for "PingRate" and raise the
         # event only once.
+        self.last_updated = datetime.now(timezone.utc)
         if result.type != DataSetType.Status:
-            self.lastUpdated = datetime.now(timezone.utc)
             asyncio.create_task(self.raise_update_event(serial_number))
+
+        # Revert to normal ping rates once all datasets have been populated with
+        # short ping rates
+        has_empty_dataset = any(len(x) == 0 for x in (thermostat.status,
+            thermostat.idustatus, thermostat.odustatus))
+        _LOGGER.debug("has_empty_dataset is %s", has_empty_dataset)
+        if not has_empty_dataset:
+            self.handler.set_ping_rate(30)
 
 
     def on_new_connection(self, ws: WebSocket) -> None:
@@ -68,13 +80,13 @@ class Service(WebSocketCallback):
 
             thermostats.append(Thermostat(
                 serial_number=t.serial_number,
-                last_updated=t.status.lastUpdated.isoformat(),
+                last_updated=t.status.last_updated.isoformat(),
                 status=t.status.data
             ))
 
         response = StatusResponseMessage(
             id=message.id,
-            last_updated=datetimeutils.to_iso_format(self.lastUpdated),
+            last_updated=datetimeutils.to_iso_format(self.last_updated),
             thermostats=thermostats
         )
         await ws.send_message(response)
@@ -104,15 +116,21 @@ class Service(WebSocketCallback):
             asyncio.create_task(self.handler.run()),
             asyncio.create_task(self.wsserver.run(self._ws_ip, self._ws_port, self._ws_url))
         }
-        last_updated = self.lastUpdated
+        last_updated = self.last_updated
         while True:
-            __, pending = await asyncio.wait(pending, timeout=5)
-            if self.thermostats and self.lastUpdated > last_updated:
-                last_updated = self.lastUpdated
+            __, pending = await asyncio.wait(pending, timeout=1)
+            if self.thermostats and self.last_updated > last_updated:
+                last_updated = self.last_updated
                 _LOGGER.debug("Thermostats:")
                 for t in self.thermostats.values():
                     _LOGGER.debug("Serial Number: %s", t.serial_number)
-                    _LOGGER.debug("Status (%s): %s", t.status.lastUpdated.isoformat(), t.status)
-                    _LOGGER.debug("Ping rates/Changes Pending: %s", t.ping_rates)
-                    _LOGGER.debug("IDU Status (%s): %s", t.idustatus.lastUpdated.isoformat(), t.idustatus)
-                    _LOGGER.debug("ODU Status (%s): %s", t.odustatus.lastUpdated.isoformat(), t.odustatus)
+                    _LOGGER.debug("Status (%s): %s",
+                        datetimeutils.to_iso_format(t.status.last_updated),
+                        t.status)
+                    _LOGGER.debug("Ping Rates/Pending Changes: %s", t.ping_rates)
+                    _LOGGER.debug("IDU Status (%s): %s",
+                        datetimeutils.to_iso_format(t.idustatus.last_updated),
+                        t.idustatus)
+                    _LOGGER.debug("ODU Status (%s): %s",
+                        datetimeutils.to_iso_format(t.odustatus.last_updated),
+                        t.odustatus)

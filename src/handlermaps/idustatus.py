@@ -1,4 +1,4 @@
-from pyproxy.httprequest import HttpRequest, HttpResponse
+from pyproxy import HttpRequest, HttpResponse
 from typing import List
 
 from . import Map
@@ -55,7 +55,7 @@ request_map: Map = {
 class IduStatusHandler(BaseHandler):
     def __init__(self) -> None:
         self.method = "POST"
-        self.url_template = "/systems/([^/]+)/idu_status"
+        self.url_template = r"/systems/([^/]+)/idu_status"
         self.type = DataSetType.IduStatus
         self.request_map = request_map
         self.response_map = { }
