@@ -19,7 +19,9 @@ def setup_logging(log_level: str) -> None:
         # form "Level <level>". If that's the case, default to 'warning' level
         level = logging.WARNING
 
-    logging.basicConfig(level=level, format="%(name)s: %(message)s")
+    logging.basicConfig(level=level,
+        format="%(asctime)s.%(msecs)03d %(name)s: %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S")
     _LOGGER.setLevel(level)
 
     # create console handler and set level appropriately
