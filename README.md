@@ -1,17 +1,16 @@
-# BEC (Bryant Evolution Connex) add-on for Home Assistant
+# BEC (Bryant Evolution Connex) Gateway
 
-This repository contains the add-on needed to add support for Bryant Evolution
-Connex thermostats. The integration that uses this add-on is located
-[here](https://github.com/brunokc/ha-bec). The easiest way to install this add-on
-is to install the integration instead and it will be pulling in as a dependency.
+The BEC Gateway works as a proxy that sits between Bryant Evolution Connex
+thermostats and their cloud service. It monitors the traffic between the two
+and allow [clients](https://github.com/brunokc/bec-client) to learn about the
+state of the thermostat and in the future will allow them to modify that state
+as well.
 
-[![Open your Home Assistant instance and show the add add-on repository dialog with a specific repository URL pre-filled.](https://my.home-assistant.io/badges/supervisor_add_addon_repository.svg)](https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https%3A%2F%2Fgithub.com%2Fbrunokc%2Fha-bec-addon)
-
-## Add-ons
-
-This repository contains the following add-ons
-
-### [Example add-on](./example)
+The BEC Gateway project was created to facilitate the integration of these
+thermostats into [Home Assistant](https://home-assistant.io). It is the the main
+piece behind the [BEC Home Assistant Add-on](https://github.com/brunokc/ha-bec-addon).
+The add-on works together with the [BEC Home Assistant Integration]
+(https://github.com/brunokc/ha-bec) to complete the BEC Home Assistant support.
 
 ![Supports aarch64 Architecture][aarch64-shield]
 ![Supports amd64 Architecture][amd64-shield]
