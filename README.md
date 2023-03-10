@@ -9,9 +9,11 @@ as well.
 The BEC Gateway project was created to facilitate the integration of these
 thermostats into [Home Assistant](https://home-assistant.io). It is the the main
 piece behind the [BEC Home Assistant Add-on](https://github.com/brunokc/ha-bec-addon).
-The add-on works together with the [BEC Home Assistant Integration]
-(https://github.com/brunokc/ha-bec) to complete the BEC Home Assistant support.
+The add-on works together with the
+[BEC Home Assistant Integration](https://github.com/brunokc/ha-bec) to complete
+the BEC Home Assistant support.
 
+<!--
 ![Supports aarch64 Architecture][aarch64-shield]
 ![Supports amd64 Architecture][amd64-shield]
 ![Supports armhf Architecture][armhf-shield]
@@ -19,6 +21,7 @@ The add-on works together with the [BEC Home Assistant Integration]
 ![Supports i386 Architecture][i386-shield]
 
 _Example add-on to use as a blueprint for new add-ons._
+-->
 
 <!--
 
