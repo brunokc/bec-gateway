@@ -46,6 +46,38 @@
         "panel": "new"
       },
       "problemMatcher": []
+    },
+    {
+      "label": "Update pyProxy",
+      "type": "shell",
+      "windows": {
+        "command": ".\\update_pyproxy.cmd",
+      },
+      "group": {
+        "kind": "test",
+        "isDefault": true
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Update pyWSP",
+      "type": "shell",
+      "windows": {
+        "command": ".\\update_pywsp.cmd",
+      },
+      "group": {
+        "kind": "test",
+        "isDefault": true
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      },
+      "problemMatcher": []
     }
   ]
 }
