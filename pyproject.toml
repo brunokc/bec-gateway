@@ -3,18 +3,18 @@ requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "bec"
+name = "bec-gateway"
 authors = [
     { name = "Bruno Kraychete da Costa", email = "brunokc@kraychete.com" },
 ]
-description = "BEC (Bryant Evolution Connex) add-on for Home Assistant"
+description = "BEC (Bryant Evolution Connex) Gateway"
 classifiers = [
     "Programming Language :: Python :: 3",
 ]
 dynamic = ["version", "readme"]
 
 [tool.setuptools]
-package-dir = { "bec" = "." }
+package-dir = { "bec" = "src" }
 
 [tool.setuptools.dynamic]
 version = { attr = "bec.__version__" }
