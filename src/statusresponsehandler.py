@@ -3,8 +3,7 @@ import logging
 import re
 from typing import Any, Callable, Dict, Optional
 
-from pyproxy.callback import ProxyServerAction
-from pyproxy.httprequest import HttpResponse
+from pyproxy import HttpResponse, ProxyServerAction
 
 from . import datetimeutils
 from .handlermaps import DataSetType, ProcessingResult
@@ -15,7 +14,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class StatusResponseHandler:
-    def __init__(self):
+    def __init__(self) -> None:
         self._last_updated = datetimeutils.utcmin
         self._dataset_type_map: Dict[DataSetType, str] = {
             DataSetType.EquipmentEvents: "equipEventsPingRate",
@@ -41,7 +40,7 @@ class StatusResponseHandler:
         _LOGGER.debug("ping rate set to %d", rate)
         self._ping_rate = rate
 
-    def _update_ping_rates(self, dataset):
+    def _update_ping_rates(self, dataset: Dict[str, Any]) -> None:
         now = datetime.now(timezone.utc)
 
         # Filter results to just the ping rates
@@ -59,7 +58,7 @@ class StatusResponseHandler:
 
         self._last_updated = now
 
-    def _select_ping_rate(self, body):
+    def _select_ping_rate(self, body: bytes) -> int:
         assert self._ping_rate is not None
         if self._ping_rate > 0:
             ping_rate = self._ping_rate

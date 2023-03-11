@@ -1,7 +1,6 @@
 from datetime import datetime, timezone
 import logging
-import re
-from typing import Any, Callable, Optional
+from typing import Callable, Dict, Optional
 
 # For HTTP Date support
 from time import mktime
@@ -32,9 +31,9 @@ class ConnexRequestHandler(ProxyServerCallback):
 
         self._status_response_handler = StatusResponseHandler()
 
-        self._client_response_headers = {
+        self._client_response_headers: Dict[str, str] = {
             "Content-Type": "application/xml",
-            "Content-Length": 0,
+            "Content-Length": "0",
             "Connection": "keep-alive",
             # "Date": "Mon, 09 Jan 2023 0$PING_RATE$:04:36 GMT",
             # "Apigw-Requestid": "edX_riSuoAMEVGA=",

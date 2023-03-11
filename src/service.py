@@ -4,7 +4,7 @@ import logging
 from pywsp import (
     WebSocket, WebSocketMessage, WebSocketServer, WebSocketCallback
 )
-from typing import Dict, List, Optional, Set
+from typing import Awaitable, Callable, Dict, List, Optional, Set, Type, cast
 
 from .handlermaps import DataSetType, ProcessingResult
 from .requesthandler import ConnexRequestHandler
@@ -32,7 +32,10 @@ class Service(WebSocketCallback):
         self.wsserver.register_callback(self)
         self._websocket: Optional[WebSocket] = None
 
-        self._ws_message_type_map = {
+        self._ws_message_type_map: Dict[
+            Type[WebSocketMessage],
+            Callable[[WebSocket, WebSocketMessage], Awaitable[None]]] = {
+
             StatusRequestMessage: self._ws_status_request
         }
 
@@ -69,7 +72,8 @@ class Service(WebSocketCallback):
         self._websocket = ws
 
 
-    async def _ws_status_request(self, ws: WebSocket, message: StatusRequestMessage) -> None:
+    async def _ws_status_request(self, ws: WebSocket, message: WebSocketMessage) -> None:
+        message = cast(StatusRequestMessage, message)
         serial_numbers = message.args
 
         thermostats: List[Thermostat] = []
