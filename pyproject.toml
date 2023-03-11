@@ -13,8 +13,9 @@ classifiers = [
 ]
 dynamic = ["version", "readme"]
 dependencies = [
-    "git+https://github.com/brunokc/pyProxy#egg=pyproxy",
-    "git+https://github.com/brunokc/pyWSP#egg=pywsp"
+    "aiohttp==3.8.3",
+    "pyproxy @ git+https://github.com/brunokc/pyProxy",
+    "pywsp @ git+https://github.com/brunokc/pyWSP"
 ]
 
 [tool.setuptools]
