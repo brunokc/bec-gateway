@@ -1,3 +1,3 @@
 aiohttp==3.8.3
-git+https://github.com/brunokc/pyProxy#egg=pyproxy
-git+https://github.com/brunokc/pyWSP#egg=pywsp
+pyproxy @ git+https://github.com/brunokc/pyProxy
+pywsp @ git+https://github.com/brunokc/pyWSP
