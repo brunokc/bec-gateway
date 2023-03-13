@@ -9,7 +9,11 @@ authors = [
 ]
 description = "BEC (Bryant Evolution Connex) Gateway"
 classifiers = [
-    "Programming Language :: Python :: 3",
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3.9",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
 ]
 dynamic = ["version", "readme", "dependencies"]
 
@@ -20,3 +24,6 @@ package-dir = { "bec" = "src" }
 version = { attr = "bec.__version__" }
 readme = { file = ["README.md"] }
 dependencies = { file = ["src/requirements.txt"] }
+
+[tool.setuptools.package-data]
+bec-gateway = ["py.typed"]
