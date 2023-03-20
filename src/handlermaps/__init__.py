@@ -3,7 +3,7 @@ import re
 
 from abc import ABC, abstractmethod
 from enum import Enum
-from pyproxy.httprequest import parse_form_data, HttpRequest, HttpResponse
+from pyproxy import HttpRequest, HttpResponse, parse_form_data
 from typing import Any, Callable, ClassVar, Dict, List, NamedTuple, Optional, Tuple
 import xml.etree.ElementTree as ET
 from xml.etree.ElementTree import Element

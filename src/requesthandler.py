@@ -6,9 +6,9 @@ from typing import Callable, Dict, Optional
 from time import mktime
 from wsgiref.handlers import format_date_time
 
-from pyproxy.callback import ProxyServerCallback, ProxyServerAction
-from pyproxy.httprequest import HttpRequest, HttpResponse
-from pyproxy.proxyserver import ProxyServer
+from pyproxy import (
+    HttpRequest, HttpResponse, ProxyServerCallback, ProxyServer, ProxyServerAction
+)
 
 from .datetimeutils import to_iso_format
 from .handlermaps import ContentProcessor, DataSetType, ProcessingResult
@@ -126,9 +126,13 @@ class ConnexRequestHandler(ProxyServerCallback):
                 # Based on the dataset type and how long ago we last received
                 # data for this type, we'll either suppress the request to the
                 # server (if it's too soon compared to the default ping rate) or
-                # we'll let it pass (if it's been longer than the default ping rate)
-                action = self._status_response_handler.get_action_for_dataset(result.type)
-                _LOGGER.debug("action for dataset %s: %s", result.type.name, action.name)
+                # we'll let it pass (if it's been the same or longer than the
+                # default ping rate)
+                type = result.type
+                action = self._status_response_handler.get_action_for_dataset(type)
+                _LOGGER.debug("action for dataset %s: %s", type.name, action.name)
+                if action == ProxyServerAction.Forward:
+                    self._status_response_handler.reset_ping_rate_for_dataset(type)
         return action
 
     async def on_new_response_async(
@@ -144,6 +148,7 @@ class ConnexRequestHandler(ProxyServerCallback):
         if not self._callback:
             return
 
+        response_handler = self._status_response_handler
         if action == ProxyServerAction.Forward:
             result = await self._content_processor.process_response(request, response)
             if result is None:
@@ -153,12 +158,16 @@ class ConnexRequestHandler(ProxyServerCallback):
                     self._callback(result)
 
                 if result.type == DataSetType.PingRates:
-                    await self._status_response_handler.ingest(result, response)
+                    response_handler.update_service_ping_rates(result.dataset)
+                    response_handler.update_ping_rates(result.dataset)
+                    await response_handler.replace_response_ping_rates(response)
         else:
             # If we suppressed the call up to the server, we're on the hook for
             # providing a response back to the client ourselves. For all currently
             # supported cases, we just need to send a dummy "200 OK" back to the
             # client.
+            # TODO: remove this URL path check with something more robust and
+            # URL independent
             if request.url.path.endswith("/status"):
                 self._set_status_response(response, request.version)
 
@@ -166,7 +175,7 @@ class ConnexRequestHandler(ProxyServerCallback):
                 # that we can ingest it and have the internal ping rates updated
                 result = await self._content_processor.process_response(request, response)
                 assert result is not None
-                await self._status_response_handler.ingest(result, response)
+                response_handler.update_ping_rates(result.dataset)
             else:
                 self._set_empty_response(response, request.version)
 
