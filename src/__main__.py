@@ -32,7 +32,9 @@ def setup_logging(log_level: str) -> None:
 
 
 if __name__ == "__main__":
-    log_level = sys.argv[1]
+    log_level = "INFO"
+    if len(sys.argv) > 1:
+        log_level = sys.argv[1]
     setup_logging(log_level)
     service = Service(PROXY_IP, PROXY_PORT, WEBSOCKET_IP, WEBSOCKET_PORT, WEBSOCKET_URL)
     try:
