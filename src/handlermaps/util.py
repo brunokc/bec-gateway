@@ -19,7 +19,7 @@ def tofloat(node: Element) -> float:
 def tobool(node: Element) -> bool:
     return node.text.lower() == "on" if node.text else False
 
-def totext(node: Element) -> str:
+def tostr(node: Element) -> str:
     return node.text if node.text else ""
 
 def todatetime(node: Element) -> datetime:

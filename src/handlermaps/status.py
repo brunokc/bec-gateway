@@ -21,7 +21,7 @@ from . import BaseHandler, DataSetType, Handler, ProcessingResult
 zone_info_request_map: Map = {
     "./name": {
         "name": "name",
-        "handler": util.totext
+        "handler": util.tostr
     },
     "./enabled": {
         "name": "enabled",
@@ -29,7 +29,7 @@ zone_info_request_map: Map = {
     },
     "./currentActivity": {
         "name": "currentActivity",
-        "handler": util.totext
+        "handler": util.tostr
     },
     "./rt": {
         "name": "temperature",
@@ -41,7 +41,7 @@ zone_info_request_map: Map = {
     },
     "./fan": {
         "name": "fan",
-        "handler": util.totext
+        "handler": util.tostr
     },
     "./htsp": {
         "name": "heatSetpoint",
@@ -57,7 +57,7 @@ zone_info_request_map: Map = {
     },
     "./zoneconditioning": {
         "name": "zoneConditioning",
-        "handler": util.totext
+        "handler": util.tostr
     }
 }
 
@@ -85,11 +85,11 @@ def handle_zones(node: Element) -> List[Dict[str, Any]]:
 request_map = {
     "/status/mode": {
         "name": "mode",
-        "handler": util.totext
+        "handler": util.tostr
     },
     "/status/cfgtype": {
         "name": "configType",
-        "handler": util.totext
+        "handler": util.tostr
     },
     "/status/oat": {
         "name": "outsideAirTemperature",
@@ -97,7 +97,7 @@ request_map = {
     },
     "/status/cfgem": {
         "name": "temperatureUnit",
-        "handler": util.totext
+        "handler": util.tostr
     },
     "/status/filtrlvl": {
         "name": "filterUsageLevel",

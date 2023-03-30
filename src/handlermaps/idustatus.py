@@ -24,15 +24,15 @@ from . import BaseHandler, DataSetType, ProcessingResult
 request_map: Map = {
     "/idu_status/idutype": {
         "name": "indoorUnitType",
-        "handler": util.totext
+        "handler": util.tostr
     },
     "/idu_status/pwmblower": {
         "name": "?pwmBlower",
-        "handler": util.totext
+        "handler": util.tostr
     },
     "/idu_status/opstat": {
         "name": "?opstat",
-        "handler": util.totext
+        "handler": util.tostr
     },
     "/idu_status/iducfm": {
         "name": "indoorUnitCFM",

@@ -43,15 +43,15 @@ from . import BaseHandler, DataSetType, ProcessingResult
 request_map: Map = {
     "/odu_status/odutype": {
         "name": "outdoorUnitType",
-        "handler": util.totext
+        "handler": util.tostr
     },
     "/odu_status/opmode": {
         "name": "mode",
-        "handler": util.totext
+        "handler": util.tostr
     },
     "/odu_status/opstat": {
         "name": "?stat",
-        "handler": util.totext
+        "handler": util.tostr
     },
     "/odu_status/iducfm": {
         "name": "inDoorUnitCFM",
