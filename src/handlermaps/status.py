@@ -4,7 +4,7 @@ from xml.etree.ElementTree import Element
 
 from . import Map
 from . import util
-from . import BaseHandler, DataSetType, Handler, ProcessingResult
+from . import BaseHandler, DataSetType, ProcessingResult
 
 # <name>ZONE 1</name>
 # <enabled>on</enabled>
