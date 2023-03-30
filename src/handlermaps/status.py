@@ -40,8 +40,8 @@ zone_info_request_map: Map = {
         "handler": util.toint
     },
     "./fan": {
-        "name": "fanOn",
-        "handler": util.tobool
+        "name": "fan",
+        "handler": util.totext
     },
     "./htsp": {
         "name": "heatSetpoint",
